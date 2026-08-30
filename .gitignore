@@ -2,3 +2,5 @@
 .venv/
 static/data/
 
+data/
+__pycache__/

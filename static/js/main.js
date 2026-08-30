@@ -1,321 +1,449 @@
 // ==========================================
-// 1. Map Initialization & Custom Panes
+// 1. Chart.js Initialization
 // ==========================================
+let sectorChart;
+let statusChart; // Add this new variable
 
-const map = L.map('india-map').setView([22.5937, 78.9629], 5);
+function initCharts() {
+    // Sector Bar Chart
+    const ctx1 = document.getElementById('sectorChart').getContext('2d');
+    sectorChart = new Chart(ctx1, {
+        type: 'bar',
+        data: {
+            labels: ['No Data'],
+            datasets: [{
+                label: 'Expenditure (Cr)',
+                data: [0],
+                backgroundColor: '#3b82f6',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } }
+        }
+    });
 
-// Create custom panes to prevent borders from being occluded by fills
-map.createPane('fillPane');
-map.getPane('fillPane').style.zIndex = 400; 
-
-map.createPane('outlinePane');
-map.getPane('outlinePane').style.zIndex = 450; // Borders sit ABOVE the fills
-map.getPane('outlinePane').style.pointerEvents = 'none'; // Clicks pass through the borders
-
-// Use CartoDB Borderless Base Map to ensure Survey of India compliance via GeoJSON
-L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', {
-    maxZoom: 12,
-    attribution: '© OpenStreetMap contributors © CARTO'
-}).addTo(map);
-
+    // Work Status Doughnut Chart
+    const ctx2 = document.getElementById('statusChart').getContext('2d');
+    statusChart = new Chart(ctx2, {
+        type: 'doughnut',
+        data: {
+            labels: ['No Data'],
+            datasets: [{
+                data: [1],
+                backgroundColor: ['#94a3b8', '#3b82f6', '#f59e0b', '#10b981', '#6366f1', '#ec4899'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'right', labels: { boxWidth: 12 } } },
+            cutout: '70%'
+        }
+    });
+}
+initCharts();
 
 // ==========================================
 // 2. Global Variables & Mock Data
 // ==========================================
-let stateLayer;
-window.stateOutlineLayer = null;
+// Works/Projects Globals
+let worksLayerGroup = L.layerGroup();
+let currentWorksData = [];
+let targetForInvestigation = ""; // Stores the current region name
 
-let districtLayer;
-window.districtOutlineLayer = null;
-
-let activeState = null; // Tracks the currently zoomed-in state
-
-// Mock Anomaly Scores for the MVP Demo
-const stateAnomalyScores = {
-    "Maharashtra": 85,
-    "Uttar Pradesh": 65,
-    "Karnataka": 20
+// Mock database to simulate different regions
+const mockData = {
+    "National": { alloc: "3,950", anom: "124", chart: [450, 250, 150, 100, 50] },
+    "Maharashtra": { alloc: "420", anom: "18", chart: [60, 40, 25, 10, 5] },
+    "Pune": { alloc: "25", anom: "5", chart: [10, 5, 2, 1, 0] }, 
+    "RS_Maharashtra": { alloc: "110", anom: "2", chart: [30, 20, 10, 5, 2] } 
 };
 
-// Target a specific district for our "Contract Splitting" MVP Demo
-const districtAnomalyScores = {
-    "Pune": 95,      // Red
-    "Nashik": 60,    // Yellow
-    "Lucknow": 80    // Red
-};
+// ==========================================
+// 2. Dynamic Data Update Logic (Backend Connected)
+// ==========================================
+async function updateDashboardStats(regionName, houseType) {
+    document.getElementById('dashboard-title').innerText = `${regionName} Overview (${houseType})`;
+    
+    try {
+        const response = await fetch(`/api/stats?house=${houseType}&region=${encodeURIComponent(regionName)}`);
+        const rawText = await response.text(); 
+        
+        let data;
+        try {
+            data = JSON.parse(rawText);
+        } catch (e) {
+            console.error("Server returned non-JSON response. Raw text:", rawText);
+            throw new Error("Invalid JSON from server. Check Flask terminal for Python tracebacks.");
+        }
+
+        // --- NEW: Handle MP Name Display ---
+        const subtitleEl = document.getElementById('dashboard-subtitle');
+        const mpNameEl = document.getElementById('mp-name');
+        
+        if (houseType === 'LS' && data.mp_name && data.mp_name !== "N/A") {
+            mpNameEl.innerText = data.mp_name;
+            subtitleEl.style.display = 'block'; // Show the MP name
+        } else {
+            subtitleEl.style.display = 'none'; // Hide if looking at State or National level
+        }
+        
+        // Update KPI Cards
+        document.getElementById('kpi-allocated').innerText = `₹${data.kpis.allocated_cr} Cr`;
+        document.getElementById('kpi-anomalies').innerText = data.kpis.anomalies;
+        
+        const utilEl = document.getElementById('kpi-utilization');
+        if(utilEl) utilEl.innerText = `${data.kpis.utilization_pct}%`;
+        
+        const unspentEl = document.getElementById('kpi-unspent');
+        if(unspentEl) unspentEl.innerText = `₹${data.kpis.unspent_cr} Cr`;
+
+        const anomalyCard = document.getElementById('kpi-anomalies').parentElement;
+        if (parseInt(data.kpis.anomalies) > 0) anomalyCard.classList.add('alert');
+        else anomalyCard.classList.remove('alert');
+
+// Update Chart 2: Work Statuses
+        if (data.charts.statuses.labels.length > 0) {
+            statusChart.data.labels = data.charts.statuses.labels;
+            statusChart.data.datasets[0].data = data.charts.statuses.data;
+            statusChart.update();
+        } else {
+            statusChart.data.labels = ['No Data'];
+            statusChart.data.datasets[0].data = [1];
+            statusChart.update();
+        }
+
+    } catch (error) {
+        console.error("Failed to fetch dashboard stats:", error);
+    }
+}
 
 
 // ==========================================
-// 3. Styling Functions
+// 3. Map Initialization & Setup
 // ==========================================
+let currentHouse = 'LS'; // Default to Lok Sabha
+
+window.setHouse = function(house) {
+    currentHouse = house;
+    
+    // Update Toggle UI
+    document.getElementById('btn-ls').classList.toggle('active', house === 'LS');
+    document.getElementById('btn-rs').classList.toggle('active', house === 'RS');
+
+    // Reset Map to apply new logic
+    resetMap();
+};
+
+const map = L.map('india-map').setView([22.5937, 78.9629], 5);
+map.createPane('fillPane'); map.getPane('fillPane').style.zIndex = 400; 
+map.createPane('outlinePane'); map.getPane('outlinePane').style.zIndex = 450; 
+map.getPane('outlinePane').style.pointerEvents = 'none';
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', {
+    maxZoom: 12, attribution: '© CARTO'
+}).addTo(map);
+
+let stateLayer; window.stateOutlineLayer = null;
+let constLayer; window.constOutlineLayer = null; 
+let activeState = null;
+
+// Mock State Scores
+const stateAnomalyScores = { "Maharashtra": 85, "Uttar Pradesh": 65 };
+
+// Dynamic PC Risk Scorer & Name Extractor
+function getConstituencyName(properties) {
+    // Looks for pc_name primarily, falls back to common variations
+    return properties.pc_name || properties.PC_NAME || properties.PC_NM || properties.name || "Unknown PC";
+}
+
+function getConstituencyScore(pcName) {
+    if (!pcName) return 0;
+    
+    const normalizedName = pcName.toString().trim().toLowerCase();
+    
+    const explicitScores = {
+        "pune": 95,      // Red 
+        "lucknow": 85,   // Red
+        "baramati": 20,  // Blue
+        "shirur": 60     // Yellow
+    };
+
+    if (explicitScores[normalizedName] !== undefined) {
+        return explicitScores[normalizedName];
+    }
+
+    // Pseudo-random generation for all other constituencies
+    let hash = 0;
+    for (let i = 0; i < normalizedName.length; i++) {
+        hash = normalizedName.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    
+    let pseudoRandom = Math.abs(hash) % 100;
+    if (pseudoRandom > 95) return 85; // 5% chance of Red
+    if (pseudoRandom > 80) return 60; // 15% chance of Yellow
+    return 15; // 80% chance of Blue
+}
+
 function getAnomalyColor(score) {
-    if (score > 75) return '#dc2626'; // Red (High Risk)
-    if (score > 50) return '#facc15'; // Yellow (Warning)
-    return '#3b82f6'; // Blue (Safe)
+    if (score > 75) return '#dc2626'; // Red
+    if (score > 50) return '#facc15'; // Yellow
+    return '#3b82f6'; // Blue
 }
 
 function getStateStyle(feature) {
     const stateName = feature.properties.ST_NM || feature.properties.name;
+    const isTransparent = (activeState && stateName.toLowerCase() === activeState.toLowerCase() && currentHouse === 'LS');
     
-    // If this is the active state, make its fill transparent so districts show clearly
-    if (activeState && stateName.toLowerCase() === activeState.toLowerCase()) {
-        return {
-            fillColor: getAnomalyColor(stateAnomalyScores[stateName] || 0),
-            weight: 0,
-            opacity: 0,
-            fillOpacity: 0 // Transparent!
-        };
-    }
-
-    // Default style for all other states
     return {
         fillColor: getAnomalyColor(stateAnomalyScores[stateName] || 0),
-        weight: 0,
-        opacity: 0,
-        fillOpacity: 0.6
+        weight: 0, opacity: 0,
+        fillOpacity: isTransparent ? 0 : 0.6
     };
 }
 
 
 // ==========================================
-// 4. State Level Map Loading
+// 4. Map Loading & Drill-down
 // ==========================================
 async function loadStatesMap() {
     try {
         const response = await fetch('/static/data/india_states_lite.geojson');
         const geojsonData = await response.json();
 
-        // LAYER 1: The colored fills (Interactive)
         stateLayer = L.geoJSON(geojsonData, {
             pane: 'fillPane',
-            style: getStateStyle, // Uses dynamic function defined above
+            style: getStateStyle,
             onEachFeature: function (feature, layer) {
                 const stateName = feature.properties.ST_NM || feature.properties.name;
-                layer.bindTooltip(`<b>${stateName}</b><br>Risk Score: ${stateAnomalyScores[stateName] || 0}`);
+                layer.bindTooltip(`<b>${stateName}</b>`);
 
                 layer.on({
-                    mouseover: (e) => {
-                        // Don't highlight if it's the currently active transparent state
-                        if (activeState && stateName.toLowerCase() === activeState.toLowerCase()) return;
-                        e.target.setStyle({ fillOpacity: 0.9 });
-                    },
-                    mouseout: (e) => {
-                        stateLayer.resetStyle(e.target);
-                    },
-                    click: (e) => {
-                        L.DomEvent.stopPropagation(e); // Stop click from hitting the background map
-                        const clickedState = feature.properties.ST_NM || feature.properties.name;
-                        drillDownToState(clickedState, e.target.getBounds());
-                    }
-                });
-            }
-        }).addTo(map);
-
-        // LAYER 2: The crisp white outlines (Non-interactive)
-        window.stateOutlineLayer = L.geoJSON(geojsonData, {
-            pane: 'outlinePane',
-            interactive: false,
-            style: {
-                color: '#ffffff',
-                weight: 1.5,
-                opacity: 1,
-                fill: false // Borders only
-            }
-        }).addTo(map);
-
-    } catch(err) {
-        console.error("Error loading State GeoJSON data:", err);
-    }
-}
-
-
-// ==========================================
-// 5. District Level Drill-down Logic
-// ==========================================
-async function drillDownToState(stateName, bounds) {
-    // 1. Zoom into the state
-    map.fitBounds(bounds);
-    
-    // 2. Update active state and refresh styles (turns clicked state transparent)
-    activeState = stateName;
-    if (stateLayer) stateLayer.setStyle(getStateStyle);
-    
-    // 3. Clear ONLY existing District Layers
-    if (districtLayer) map.removeLayer(districtLayer);
-    if (window.districtOutlineLayer) map.removeLayer(window.districtOutlineLayer);
-
-    const backBtn = document.getElementById('back-button');
-    if (backBtn) backBtn.style.display = 'inline-block';
-
-    const stateSlug = stateName.toLowerCase()
-        .replace(/&/g, 'and')
-        .replace(/[^a-z0-9\s_]/g, '')
-        .trim()
-        .replace(/\s+/g, '_');
-
-    // 4. Change cursor to loading
-    document.getElementById('india-map').style.cursor = 'wait';
-
-    try {
-        const response = await fetch(`/static/data/districts/${stateSlug}.json`);
-        
-        // 5. If the district file doesn't exist for this state, throw an error
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const stateDistrictGeoJSON = await response.json();
-
-        // Check to ensure the user hasn't clicked another state while this was downloading
-        if (activeState !== stateName) return; 
-
-        // LAYER 1: District Fills
-        districtLayer = L.geoJSON(stateDistrictGeoJSON, {
-            pane: 'fillPane',
-            style: function(feature) {
-                const districtName = feature.properties.DISTRICT || feature.properties.dtname || feature.properties.NAME_2;
-                return {
-                    fillColor: getAnomalyColor(districtAnomalyScores[districtName] || 0),
-                    weight: 0, 
-                    fillOpacity: 0.7
-                };
-            },
-            onEachFeature: function(feature, layer) {
-                const districtName = feature.properties.DISTRICT || feature.properties.dtname || feature.properties.NAME_2;
-                const score = districtAnomalyScores[districtName] || 0;
-                
-                layer.bindTooltip(`<b>${districtName} District</b><br>Risk Score: ${score}`);
-                
-                layer.on({
-                    mouseover: (e) => e.target.setStyle({ fillOpacity: 0.9 }),
-                    mouseout: (e) => districtLayer.resetStyle(e.target),
                     click: (e) => {
                         L.DomEvent.stopPropagation(e);
-                        if (score > 75) {
-                            triggerInvestigation(districtName + ' District, ' + stateName);
+                        // Update the Dashboard Stats for the clicked State
+                        updateDashboardStats(stateName, currentHouse);
+                        
+                        if (currentHouse === 'LS') {
+                            drillDownToConstituencies(stateName, e.target.getBounds());
                         } else {
-                            alert(`No critical anomalies detected in ${districtName}.`);
+                            map.fitBounds(e.target.getBounds());
+                            document.getElementById('back-button').style.display = 'inline-block';
                         }
                     }
                 });
             }
         }).addTo(map);
 
-        // LAYER 2: District Outlines
-        window.districtOutlineLayer = L.geoJSON(stateDistrictGeoJSON, {
-            pane: 'outlinePane',
-            interactive: false,
-            style: { color: '#ffffff', weight: 1, opacity: 1, fill: false }
+        window.stateOutlineLayer = L.geoJSON(geojsonData, {
+            pane: 'outlinePane', interactive: false,
+            style: { color: '#ffffff', weight: 1.5, fill: false }
+        }).addTo(map);
+
+    } catch(err) { console.error(err); }
+}
+
+async function drillDownToConstituencies(stateName, bounds) {
+    map.fitBounds(bounds);
+    activeState = stateName;
+    if (stateLayer) stateLayer.setStyle(getStateStyle);
+    
+    if (constLayer) map.removeLayer(constLayer);
+    if (window.constOutlineLayer) map.removeLayer(window.constOutlineLayer);
+
+    document.getElementById('back-button').style.display = 'inline-block';
+    document.getElementById('india-map').style.cursor = 'wait';
+
+    // Exact slug match for python setup_maps.py output
+    const stateSlug = stateName.toLowerCase()
+        .replace(/&/g, 'and')
+        .replace(/[^a-z0-9\s_]/g, '')
+        .trim()
+        .replace(/\s+/g, '_');
+
+    try {
+        const response = await fetch(`/static/data/constituencies/${stateSlug}.json`);
+        if (!response.ok) throw new Error(`File not found: ${stateSlug}.json`);
+        
+        const pcGeoJSON = await response.json();
+        if (activeState !== stateName) return; 
+
+        constLayer = L.geoJSON(pcGeoJSON, {
+            pane: 'fillPane',
+            style: function(f) {
+                const pcName = getConstituencyName(f.properties);
+                const score = getConstituencyScore(pcName);
+                return { fillColor: getAnomalyColor(score), weight: 0, fillOpacity: 0.7 };
+            },
+            onEachFeature: function(f, layer) {
+                const pcName = getConstituencyName(f.properties);
+                const score = getConstituencyScore(pcName);
+                
+                layer.bindTooltip(`<b>${pcName} PC</b><br>Risk Score: ${score}`);
+                
+                layer.on({
+                    mouseover: (e) => e.target.setStyle({ fillOpacity: 0.9 }),
+                    mouseout: (e) => constLayer.resetStyle(e.target),
+                    click: (e) => {
+                        L.DomEvent.stopPropagation(e);
+                        
+                        // 1. Zoom Map exactly to this constituency
+                        map.fitBounds(e.target.getBounds());
+                        
+                        // 2. Update Stats
+                        updateDashboardStats(pcName, 'LS');
+                        
+                        // 3. Load Project Locations (Works)
+                        loadMockWorks(e.target.getBounds(), pcName);
+                        
+                        // 4. Update and Show Investigation Button
+                        targetForInvestigation = `${pcName} Constituency`;
+                        const invBtn = document.getElementById('investigate-btn');
+                        invBtn.style.display = 'block';
+                        invBtn.innerHTML = `🚨 Run AI Audit on ${pcName}`;
+                        
+                        // Style button based on risk
+                        if (score > 75) {
+                            invBtn.style.backgroundColor = '#dc2626'; // Red for high risk
+                        } else {
+                            invBtn.style.backgroundColor = '#2563eb'; // Blue for normal
+                        }
+                    }
+                });
+            }
+        }).addTo(map);
+
+        window.constOutlineLayer = L.geoJSON(pcGeoJSON, {
+            pane: 'outlinePane', interactive: false,
+            style: { color: '#ffffff', weight: 1, fill: false }
         }).addTo(map);
 
     } catch (err) {
-        console.warn(`District data missing or failed to load for ${stateName} (${stateSlug}.json)`);
-        
-        // REVERT THE UI: Make the state solid again so it doesn't look broken/blank
+        console.warn(`Constituency data missing for ${stateName}`, err);
         if (activeState === stateName) {
             activeState = null;
             if (stateLayer) stateLayer.setStyle(getStateStyle);
-            alert(`Detailed district data is not available for ${stateName} in this dataset.`);
+            alert(`Detailed constituency data is not available for ${stateName}. Did you run python setup_maps.py?`);
         }
     } finally {
-        // Remove loading cursor
         document.getElementById('india-map').style.cursor = '';
     }
 }
 
-// ==========================================
-// 6. Reset Map Logic
-// ==========================================
-window.resetMap = function() {
-    // Reset active state variable and refresh styles to make all states solid again
-    activeState = null;
-    if (stateLayer) stateLayer.setStyle(getStateStyle);
-
-    // Remove District Layers
-    if (districtLayer) map.removeLayer(districtLayer);
-    if (window.districtOutlineLayer) map.removeLayer(window.districtOutlineLayer);
-    
-    // Reset view to entire India
-    map.setView([22.5937, 78.9629], 5);
-    
-    // Hide Back Button safely
-    const backBtn = document.getElementById('back-button');
-    if (backBtn) backBtn.style.display = 'none';
+// Function attached to the new Investigate Button
+window.executeInvestigation = function() {
+    if (targetForInvestigation) {
+        triggerInvestigation(targetForInvestigation);
+    }
 };
 
+window.resetMap = function() {
+    activeState = null;
+    if (stateLayer) stateLayer.setStyle(getStateStyle);
+    if (constLayer) map.removeLayer(constLayer);
+    if (window.constOutlineLayer) map.removeLayer(window.constOutlineLayer);
+    
+    // Clear the works layer and hide the filter
+    worksLayerGroup.clearLayers();
+    document.getElementById('work-filter').style.display = 'none';
+    document.getElementById('investigate-btn').style.display = 'none';
+    
+    map.setView([22.5937, 78.9629], 5);
+    document.getElementById('back-button').style.display = 'none';
+    
+    updateDashboardStats('National', currentHouse);
+};
 
-// ==========================================
-// 7. Map Background Click Handler (Reset to National)
-// ==========================================
 map.on('click', function(e) {
-    const backBtn = document.getElementById('back-button');
-    // If the back button is visible, it means we are zoomed into a state.
-    // Clicking the empty background should reset the view.
-    if (backBtn && backBtn.style.display !== 'none') {
-        resetMap();
-    }
+    if (document.getElementById('back-button').style.display !== 'none') resetMap();
 });
 
-
 // ==========================================
-// 8. Agent Trigger & Backend API call
+// 5. Agent Trigger
 // ==========================================
-async function triggerInvestigation(targetId) {
-    const agentOutput = document.getElementById('agent-output');
-    
-    // UI Loading State
-    agentOutput.innerHTML = `
-        <p style="color: #dc2626; font-size: 1.1em;"><b>⚠ Anomaly detected in ${targetId}.</b></p>
-        <p style="color: #4b5563;">Agent Orchestrator initializing...</p>
-        <p style="color: #4b5563;"><i>🔍 Querying local SQLite database...</i></p>
-    `;
-    
-    try {
-        const response = await fetch('/api/investigate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ target_id: targetId })
-        });
-        const data = await response.json();
-        
-        // Render the Agent's response steps (Tool chain)
-        let stepsHTML = data.steps.map(step => `
-            <li style="margin-bottom: 8px;">
-                <span style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; font-family: monospace;">
-                    ${step.action}
-                </span><br>
-                <span style="color: #374151;">${step.result}</span>
-            </li>
-        `).join('');
-        
-        agentOutput.innerHTML = `
-            <p style="color: #dc2626; font-size: 1.1em;"><b>⚠ Investigating ${targetId}</b></p>
-            <ul style="list-style-type: none; padding-left: 0;">${stepsHTML}</ul>
-            <div style="margin-top: 15px; padding: 15px; background: #fee2e2; border-left: 4px solid #ef4444; border-radius: 4px;">
-                <h4 style="margin: 0 0 10px 0; color: #991b1b;">Audit Recommendation</h4>
-                <p style="margin: 0; color: #7f1d1d; line-height: 1.5;">${data.final_finding}</p>
-            </div>
-        `;
-    } catch (error) {
-        console.error('Error connecting to AI Agent:', error);
-        agentOutput.innerHTML = `<p style="color: red;">Failed to connect to the Investigation Engine API.</p>`;
-    }
+function triggerInvestigation(targetId) {
+    // Redirect to the new page and pass the target region in the URL query string
+    window.location.href = `/investigate?target=${encodeURIComponent(targetId)}`;
 }
 
+// ==========================================
+// 6. Works/Projects Rendering Logic
+// ==========================================
+function loadMockWorks(bounds, regionName) {
+    currentWorksData = [];
+    const categories = ['Roads', 'Water', 'Education', 'Health', 'Power'];
+    
+    // Generate ~20-40 random project locations within the bounding box of the constituency
+    const numWorks = Math.floor(Math.random() * 20) + 20;
+    
+    const latMin = bounds.getSouth();
+    const latMax = bounds.getNorth();
+    const lngMin = bounds.getWest();
+    const lngMax = bounds.getEast();
+    
+    for(let i=0; i<numWorks; i++) {
+        currentWorksData.push({
+            id: i,
+            lat: latMin + Math.random() * (latMax - latMin),
+            lng: lngMin + Math.random() * (lngMax - lngMin),
+            category: categories[Math.floor(Math.random() * categories.length)],
+            amount: (Math.random() * 15 + 2).toFixed(2) // Fake Lakhs amount
+        });
+    }
+    
+    // Show the filter dropdown now that we have data
+    document.getElementById('work-filter').style.display = 'block';
+    
+    worksLayerGroup.addTo(map);
+    renderWorks();
+}
+
+window.renderWorks = function() {
+    worksLayerGroup.clearLayers();
+    const filterVal = document.getElementById('work-filter').value;
+    
+    currentWorksData.forEach(work => {
+        // Skip if filtered out
+        if(filterVal !== 'All' && work.category !== filterVal) return;
+        
+        // Color-code the markers
+        let color = '#64748b'; // Default grey
+        if(work.category === 'Roads') color = '#3b82f6'; 
+        if(work.category === 'Water') color = '#06b6d4'; 
+        if(work.category === 'Education') color = '#f59e0b'; 
+        if(work.category === 'Health') color = '#10b981';
+        
+        // Create a precise dot marker
+        const marker = L.circleMarker([work.lat, work.lng], {
+            radius: 6,
+            fillColor: color,
+            color: '#ffffff',
+            weight: 1.5,
+            fillOpacity: 0.9
+        });
+        
+        marker.bindTooltip(`
+            <b>${work.category} Project</b><br>
+            Sanctioned: ₹${work.amount} Lakhs<br>
+            <i>Click to view details (Mock)</i>
+        `);
+        
+        worksLayerGroup.addLayer(marker);
+    });
+};
 
 // ==========================================
-// 9. Handle Window Resizing gracefully
+// 7. Handle Window Resizing gracefully
 // ==========================================
 window.addEventListener('resize', function() {
     if (map) {
-        // Tells Leaflet to recalculate its bounds based on the new flexbox size
         map.invalidateSize(); 
     }
 });
 
 
-// ==========================================
-// 10. Bootstrap Application
-// ==========================================
-// Load the states map immediately on script execution
+// Bootstrap Application
 loadStatesMap();
+updateDashboardStats('National', 'LS');

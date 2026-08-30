@@ -1,108 +1,131 @@
 {% extends 'base.html' %}
 
-{% block content %}
-<!-- Leaflet CSS & JS (Loaded directly from CDN so you don't have to install anything) -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+{% block header_title %}Command Center : National Overview{% endblock %}
 
+{% block head %}
 <style>
-    /* 1. Prevent all scrolling on the main window */
-    html, body { 
-        margin: 0; 
-        padding: 0; 
-        height: 100vh; /* Exactly 100% of the viewport window height */
-        overflow: hidden; 
-        font-family: system-ui, sans-serif; 
-        background: #f4f4f5; 
-        box-sizing: border-box;
+    .dashboard-layout {
+        display: grid;
+        grid-template-columns: 5fr 4fr;
+        gap: 20px;
+        height: calc(100vh - 60px); 
+        padding: 20px;
     }
 
-    *, *:before, *:after { box-sizing: inherit; }
-
-    /* 2. Container takes full height minus padding */
-    .container { 
-        display: flex; 
-        gap: 20px; 
-        height: 100vh; 
-        padding: 20px; 
-        max-width: 1600px; /* Wider for full screen feel */
-        margin: 0 auto; 
-    }
-
-    /* 3. Panels act as flex columns */
-    .panel { 
-        background: white; 
-        padding: 20px; 
-        border-radius: 8px; 
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
-        display: flex; 
-        flex-direction: column; 
-    }
-
-    #map-panel { 
-        flex: 2; /* Takes 2/3 of the width */
-        height: 100%; 
-    }
-
-    #agent-panel { 
-        flex: 1; /* Takes 1/3 of the width */
-        height: 100%; 
-        overflow-y: auto; /* Only allow scrolling INSIDE the agent panel if text gets long */
-    }
-
-    /* Filters section */
-    .filters { 
-        margin-bottom: 15px; 
-        display: flex; 
-        gap: 10px; 
-        flex-shrink: 0; /* Prevents filters from squishing */
-    }
-    select, button { padding: 8px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer;}
-    button:hover { background: #e2e8f0; }
-
-    h2 { margin-top: 0; margin-bottom: 15px; flex-shrink: 0; }
-
-    /* 4. The Map stretches dynamically */
-    #india-map { 
-        flex-grow: 1; /* Automatically expands to fill all remaining vertical space! */
-        width: 100%; 
-        border-radius: 8px; 
-        z-index: 1; 
-        border: 1px solid #ddd; 
-        min-height: 0; /* Required for Firefox flexbox rendering */
-    }
+    .map-col { display: flex; flex-direction: column; gap: 15px; }
+    .controls { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; gap: 10px;}
     
-    .leaflet-tooltip { font-size: 14px; }
+    .toggle-group { display: flex; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; }
+    .toggle-btn { padding: 8px 16px; border: none; background: white; cursor: pointer; font-weight: 500; color: #475569; }
+    .toggle-btn.active { background: #2563eb; color: white; }
+
+    /* New Select Filter */
+    .filter-select { padding: 8px; border-radius: 6px; border: 1px solid #cbd5e1; background: white; color: #334155; font-weight: 500; display: none; }
+
+    #india-map { flex-grow: 1; border-radius: 8px; border: 1px solid #e2e8f0; z-index: 1; }
+
+/* Update these in your <style> block */
+    .stats-col { display: flex; flex-direction: column; gap: 20px; overflow-y: auto; padding-right: 5px;}
+    
+    .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .kpi-card { background: white; padding: 15px 20px; border-radius: 8px; border: 1px solid #e2e8f0; border-left: 4px solid #2563eb; }
+    .kpi-card.alert { border-left-color: #dc2626; }
+    .kpi-card.warning { border-left-color: #f59e0b; }
+    .kpi-title { color: #64748b; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; }
+    .kpi-value { font-size: 1.6rem; font-weight: 700; color: #0f172a; margin-top: 5px; }
+
+    .charts-wrapper { display: flex; flex-direction: column; gap: 15px; }
+    .chart-container { background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; height: 250px; display: flex; flex-direction: column;}
+    .chart-title { margin: 0 0 10px 0; font-size: 0.9rem; color: #475569; text-transform: uppercase; font-weight: 600;}
+    
+    /* New Investigate Button */
+    .investigate-btn {
+        width: 100%; padding: 15px; border: none; border-radius: 8px; font-size: 1.1rem;
+        font-weight: bold; color: white; cursor: pointer; display: none;
+        transition: transform 0.1s, background 0.2s;
+    }
+    .investigate-btn:hover { transform: translateY(-2px); }
 </style>
+{% endblock %}
 
-<div class='container'>
-    <div id='map-panel' class='panel'>
-        <h2>Analytics & Exception Map</h2>
-        
-    <div class="filters">
-        <select id="work-type">
-            <option>All Work Categories</option>
-            <option>Roads & Bridges</option>
-            <option>Drinking Water</option>
-        </select>
-        <select id="risk-filter">
-            <option>Show All Risk Levels</option>
-            <option>High Risk Only (Flagged)</option>
-        </select>
-        <button id="back-button" onclick="resetMap()" style="display: none; background: #475569;">
-            ← Back to National View
-        </button>
-    </div>
+{% block content %}
+<div class="dashboard-layout">
+    <!-- LEFT: MAP -->
+    <div class="map-col">
+        <div class="controls">
+            <div class="toggle-group">
+                <button id="btn-ls" class="toggle-btn active" onclick="setHouse('LS')">Lok Sabha</button>
+                <button id="btn-rs" class="toggle-btn" onclick="setHouse('RS')">Rajya Sabha</button>
+            </div>
+            
+            <!-- Work Type Filter (Hidden until zoomed in) -->
+            <select id="work-filter" class="filter-select" onchange="renderWorks()">
+                <option value="All">All Work Categories</option>
+                <option value="Roads">Roads & Bridges</option>
+                <option value="Water">Drinking Water</option>
+                <option value="Education">Education</option>
+            </select>
 
-        <!-- The Map -->
+            <button id="back-button" onclick="resetMap()" style="display: none; padding: 8px 12px; background: #475569; color: white; border:none; border-radius: 4px; cursor: pointer;">
+                ← Reset View
+            </button>
+        </div>
         <div id="india-map"></div>
     </div>
-    
-    <div id='agent-panel' class='panel'>
-        <h2>Investigation Engine</h2>
-        <div id='agent-output'>
-            <p><i>Hover over states to view anomaly scores. Click a red state to begin an AI investigation.</i></p>
+
+<!-- RIGHT: STATS -->
+    <div class="stats-col">
+        <h2 id="dashboard-title" style="margin: 0; color: #1e293b;">National Overview (Lok Sabha)</h2>
+        
+        <!-- MP Name Subtitle -->
+        <p id="dashboard-subtitle" style="margin: 5px 0 10px 0; color: #64748b; font-size: 0.95rem; display: none;">
+            <span style="font-weight: 600;">Elected MP:</span> <span id="mp-name" style="color: #0f172a;"></span>
+        </p>
+
+        <!-- Manual Trigger Button -->
+        <button id="investigate-btn" class="investigate-btn" onclick="executeInvestigation()">
+            🚨 Run AI Audit on Region
+        </button>
+        
+        <!-- 4 KPI Cards (2x2 Grid) -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-title">Allocated Funds</div>
+                <div id="kpi-allocated" class="kpi-value">₹0 Cr</div>
+            </div>
+            <div class="kpi-card warning">
+                <div class="kpi-title">Unspent Balance</div>
+                <div id="kpi-unspent" class="kpi-value">₹0 Cr</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Fund Utilization</div>
+                <div id="kpi-utilization" class="kpi-value">0%</div>
+            </div>
+            <div class="kpi-card alert">
+                <div class="kpi-title">Anomalies Detected</div>
+                <div id="kpi-anomalies" class="kpi-value">0</div>
+            </div>
+        </div>
+
+        <!-- Charts Area -->
+        <div class="charts-wrapper">
+            <div class="chart-container">
+                <h4 class="chart-title">Expenditure by Sector</h4>
+                <div style="flex-grow: 1; position: relative;">
+                    <canvas id="sectorChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-container">
+                <h4 class="chart-title">Work Status Pipeline</h4>
+                <div style="flex-grow: 1; position: relative;">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
 {% endblock %}

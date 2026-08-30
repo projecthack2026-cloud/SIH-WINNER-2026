@@ -13,6 +13,8 @@
 
 # Frontend
 
+## HTML + CSS + JS + Leaflet.js for map
+
 ## Login
 
 ## Dashboard
@@ -26,7 +28,10 @@
 ## Settings/
 
 
+
 # Backend
+
+## Python - Flask + SQLite
 
 ## Deterministic rules
 
@@ -54,4 +59,17 @@
 
 # Detailed proposed solution
 
-Short name for project - AI based auditing platform for MPLADS built on eSAKSHI data. 
+
+# User flow
+
+All data accessible to every user
+
+Login
+
+MP -  See issues in constituency -> Get recommendation -> Approve recommendation
+
+Central Auditors - See reports from district administration -> Approve investigation
+
+District - Review complaints, Detect anomaly -> create report
+
+Citizen - Register complaint with picture
