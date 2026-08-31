@@ -96,6 +96,12 @@
             <a href="/investigate" class="nav-link {{ 'active' if request.path == '/investigate' else '' }}">
                 🤖 Investigation Engine
             </a>
+            <a href="/work/101" class="nav-link {{ 'active' if request.path.startswith('/work') else '' }}">
+                🏗️ Work Analytics
+            </a>
+            <a href="/complaints" class="nav-link {{ 'active' if request.path == '/complaints' else '' }}">
+                🧾 Complaints
+            </a>
         </div>
         <div style="padding: 20px; color: #64748b; font-size: 0.8rem;">
             MVP Build v1.0
