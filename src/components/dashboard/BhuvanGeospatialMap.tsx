@@ -157,7 +157,7 @@ export const BhuvanGeospatialMap: React.FC<Props> = ({
       setMapProjects(projRes || []);
     } catch (err: any) {
       console.error("Geospatial REST API error:", err);
-      setError("Unable to load project locations.");
+      setError("Unable to connect to the monitoring API.");
       setMapProjects([]);
     } finally {
       setLoading(false);
@@ -711,7 +711,7 @@ export const BhuvanGeospatialMap: React.FC<Props> = ({
           <div className="absolute inset-0 bg-rose-50/90 z-50 flex items-center justify-center p-6 text-center">
             <div className="bg-white p-6 rounded-3xl border border-rose-200 shadow-2xl max-w-sm space-y-3">
               <AlertCircle className="w-8 h-8 text-rose-600 mx-auto" />
-              <h4 className="font-extrabold text-slate-900 text-sm">Unable to load project locations</h4>
+              <h4 className="font-extrabold text-slate-900 text-sm">Unable to connect to the monitoring API.</h4>
               <p className="text-xs text-slate-600 leading-relaxed">
                 Could not connect to the geospatial REST API. Dashboard tables remain fully active.
               </p>
