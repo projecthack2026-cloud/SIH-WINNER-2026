@@ -1,5 +1,5 @@
 import re
-from backend.etl.clean_datasets import clean_string
+from etl.clean_datasets import clean_string
 
 def extract_canonical_work_id(raw_work_val: str | None) -> str | None:
     """

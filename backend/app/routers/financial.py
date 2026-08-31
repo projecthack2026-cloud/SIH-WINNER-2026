@@ -2,9 +2,9 @@ from typing import Optional, List
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from backend.app.database import get_db
-from backend.app.models.models import Project, ProjectExpenditure
-from backend.app.schemas.project import ExpenditureSchema
+from app.database import get_db
+from app.models.models import Project, ProjectExpenditure
+from app.schemas.project import ExpenditureSchema
 
 router = APIRouter(prefix="/financial", tags=["Financial"])
 

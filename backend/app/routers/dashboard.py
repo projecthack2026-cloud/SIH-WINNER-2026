@@ -2,9 +2,9 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func, or_
-from backend.app.database import get_db
-from backend.app.models.models import Project, ProjectExpenditure
-from backend.app.schemas.project import DashboardSummaryResponse
+from app.database import get_db
+from app.models.models import Project, ProjectExpenditure
+from app.schemas.project import DashboardSummaryResponse
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 

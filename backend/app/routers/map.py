@@ -4,15 +4,15 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func, or_
 
-from backend.app.database import get_db
-from backend.app.config import settings
-from backend.app.models.models import Project, ProjectLocation, ProjectExpenditure, ProjectFeature
-from backend.app.schemas.map import (
+from app.database import get_db
+from app.config import settings
+from app.models.models import Project, ProjectLocation, ProjectExpenditure, ProjectFeature
+from app.schemas.map import (
     MapProjectResponse, UnmappedProjectResponse, GlobalMapSummaryResponse,
     DistrictSummaryResponse, DistrictItem, StateItem, BhuvanConfigResponse,
     LocationProcessingStatsResponse, LocationQualitySummaryResponse
 )
-from backend.app.services.district_utils import ensure_districts_populated
+from app.services.district_utils import ensure_districts_populated
 
 router = APIRouter(prefix="/map", tags=["Geospatial Map"])
 
@@ -60,7 +60,7 @@ def get_map_debug(
     """
     Diagnostic endpoint returning database & location processing health statistics.
     """
-    from backend.app.services.bhuvan_geocoding import BhuvanGeocodingService
+    from app.services.bhuvan_geocoding import BhuvanGeocodingService
     
     ensure_districts_populated(db)
     
@@ -144,7 +144,7 @@ def process_project_locations(
     Triggers the Natural Language Location Extraction Pipeline on project records.
     Extracts village, locality, and road endpoints from work_description.
     """
-    from backend.etl.process_locations import run_location_processing
+    from etl.process_locations import run_location_processing
     try:
         lim = limit if isinstance(limit, int) else None
         stats = run_location_processing(limit=lim)

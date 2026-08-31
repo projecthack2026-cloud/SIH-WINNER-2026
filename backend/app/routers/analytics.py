@@ -2,9 +2,9 @@ from typing import Optional, List
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func, or_
-from backend.app.database import get_db
-from backend.app.models.models import Project, ProjectExpenditure, AnomalyResult
-from backend.app.schemas.project import StateRankingSchema, DistrictRankingSchema, AnomalyResponseSchema
+from app.database import get_db
+from app.models.models import Project, ProjectExpenditure, AnomalyResult
+from app.schemas.project import StateRankingSchema, DistrictRankingSchema, AnomalyResponseSchema
 
 router = APIRouter(prefix="/analytics", tags=["Analytics"])
 

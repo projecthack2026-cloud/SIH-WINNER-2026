@@ -1,5 +1,5 @@
 from typing import Optional, Dict, Any
-from backend.app.config import settings
+from app.config import settings
 
 class BhuvanGeocodingService:
     """

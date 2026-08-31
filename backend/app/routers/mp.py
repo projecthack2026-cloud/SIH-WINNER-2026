@@ -2,9 +2,9 @@ from typing import Optional, List
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func, or_
-from backend.app.database import get_db
-from backend.app.models.models import MpAllocation, Project, ProjectExpenditure
-from backend.app.schemas.project import MpAllocationResponse, MpSummaryResponse
+from app.database import get_db
+from app.models.models import MpAllocation, Project, ProjectExpenditure
+from app.schemas.project import MpAllocationResponse, MpSummaryResponse
 
 router = APIRouter(prefix="/mp", tags=["MP Allocations"])
 

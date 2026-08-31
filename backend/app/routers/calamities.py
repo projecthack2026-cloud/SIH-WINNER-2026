@@ -2,9 +2,9 @@ from typing import Optional, List
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from backend.app.database import get_db
-from backend.app.models.models import CalamityConsent
-from backend.app.schemas.project import CalamityConsentResponse
+from app.database import get_db
+from app.models.models import CalamityConsent
+from app.schemas.project import CalamityConsentResponse
 
 router = APIRouter(prefix="/calamities", tags=["Calamity Consents"])
 

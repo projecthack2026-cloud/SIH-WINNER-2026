@@ -1,4 +1,4 @@
-from backend.etl.normalize_datasets import extract_canonical_work_id, normalize_entity_name, normalize_mp_name
+from etl.normalize_datasets import extract_canonical_work_id, normalize_entity_name, normalize_mp_name
 
 class ProjectMatcher:
     """

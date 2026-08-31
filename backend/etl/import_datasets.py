@@ -5,17 +5,17 @@ import pandas as pd
 import numpy as np
 from sqlalchemy.orm import Session
 
-# Ensure backend package can be imported
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+# Ensure backend package components can be imported
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from backend.app.database import engine, Base, SessionLocal
-from backend.app.models.models import (
+from app.database import engine, Base, SessionLocal
+from app.models.models import (
     User, Project, ProjectRecommendation, ProjectSanction, ProjectCompletion,
     ProjectExpenditure, MpAllocation, CalamityConsent, ProjectFeature,
     AnomalyResult, RiskScore, DuplicateCandidate, ComplianceResult
 )
-from backend.etl.clean_datasets import clean_currency, clean_date, clean_string
-from backend.etl.normalize_datasets import extract_canonical_work_id, normalize_mp_name, normalize_entity_name
+from etl.clean_datasets import clean_currency, clean_date, clean_string
+from etl.normalize_datasets import extract_canonical_work_id, normalize_mp_name, normalize_entity_name
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("ETL_Importer")
@@ -413,7 +413,7 @@ def run_etl():
         # -------------------------------------------------------------
         # STEP 7.5: SEED REAL VERIFIED GEOSPATIAL PROJECT LOCATIONS
         # -------------------------------------------------------------
-        from backend.app.models.models import ProjectLocation
+        from app.models.models import ProjectLocation
         from sqlalchemy import func
 
         db.query(ProjectLocation).delete()

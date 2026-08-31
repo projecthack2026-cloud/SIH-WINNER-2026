@@ -5,16 +5,16 @@ from typing import Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import func, text
 
-# Ensure backend package can be imported
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+# Ensure backend package components can be imported
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from backend.app.database import engine, Base, SessionLocal
-from backend.app.models.models import Project, ProjectLocation
-from backend.app.services.location_extraction import LocationExtractionService
-from backend.app.services.location_normalization import LocationNormalizationService
-from backend.app.services.location_validation import LocationValidationService
-from backend.app.services.bhuvan_geocoding import BhuvanGeocodingService
-from backend.app.services.district_utils import ensure_districts_populated
+from app.database import engine, Base, SessionLocal
+from app.models.models import Project, ProjectLocation
+from app.services.location_extraction import LocationExtractionService
+from app.services.location_normalization import LocationNormalizationService
+from app.services.location_validation import LocationValidationService
+from app.services.bhuvan_geocoding import BhuvanGeocodingService
+from app.services.district_utils import ensure_districts_populated
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("LocationProcessor")
