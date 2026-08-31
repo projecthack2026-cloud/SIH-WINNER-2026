@@ -1,7 +1,7 @@
 // API Client for MPLADS AI Monitor REST Backend
 import type { MockProject } from '../types/complaint';
 
-const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'https://sih-winner-2026.onrender.com';
 const cleanBaseUrl = rawBaseUrl.replace(/\/+$/, '');
 const API_BASE_URL = cleanBaseUrl.endsWith('/api') ? cleanBaseUrl : `${cleanBaseUrl}/api`;
 
