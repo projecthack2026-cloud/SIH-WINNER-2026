@@ -8,6 +8,8 @@ from app.schemas.project import DashboardSummaryResponse
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
+@router.get("", response_model=DashboardSummaryResponse)
+@router.get("/", response_model=DashboardSummaryResponse)
 @router.get("/summary", response_model=DashboardSummaryResponse)
 def get_dashboard_summary(
     state: Optional[str] = Query(None),
