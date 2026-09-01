@@ -12,6 +12,7 @@ def parse_cors_origins() -> list[str]:
     raw = os.getenv("CORS_ORIGINS")
     default_origins = [
         "https://sih-winner-2026-jnmq.vercel.app",
+        "https://sih-winner-2026-indol.vercel.app",
         "https://sih-winner-2026.onrender.com",
         "http://localhost:5173",
         "http://127.0.0.1:5173",
@@ -22,16 +23,24 @@ def parse_cors_origins() -> list[str]:
     if not raw:
         return default_origins
     raw_str = raw.strip()
+    if raw_str == "*":
+        return ["*"]
+    
+    parsed_origins: list[str] = []
     if raw_str.startswith("[") and raw_str.endswith("]"):
         import json
         try:
             parsed = json.loads(raw_str)
             if isinstance(parsed, list):
-                return parsed
+                parsed_origins = [str(o).strip() for o in parsed if o]
         except Exception:
             pass
-    origins = [o.strip() for o in raw_str.split(",") if o.strip()]
-    return origins if origins else default_origins
+    if not parsed_origins:
+        parsed_origins = [o.strip() for o in raw_str.split(",") if o.strip()]
+
+    # Deduplicate while preserving order and ensuring default origins are included
+    combined = list(dict.fromkeys(parsed_origins + default_origins))
+    return combined
 
 class Settings:
     PROJECT_NAME: str = "MPLADS AI Monitor — Infrastructure Monitoring & Accountability"
@@ -44,6 +53,10 @@ class Settings:
     )
     
     CORS_ORIGINS: list[str] = parse_cors_origins()
+    CORS_ORIGIN_REGEX: str = os.getenv(
+        "CORS_ORIGIN_REGEX",
+        r"https://.*\.vercel\.app|https://.*\.onrender\.com"
+    )
     
     BHUVAN_WMS_URL: str = os.getenv("BHUVAN_WMS_URL", "")
     BHUVAN_WMTS_URL: str = os.getenv("BHUVAN_WMTS_URL", "")
