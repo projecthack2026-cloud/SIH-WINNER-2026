@@ -11,7 +11,7 @@ DEFAULT_DB_PATH = os.path.join(BASE_DIR, "mplads.db")
 def parse_cors_origins() -> list[str]:
     raw = os.getenv("CORS_ORIGINS")
     default_origins = [
-        "https://sih-winner-2026-indol.vercel.app",
+        "https://sih-winner-2026-jnmq.vercel.app",
         "https://sih-winner-2026.onrender.com",
         "http://localhost:5173",
         "http://127.0.0.1:5173",
