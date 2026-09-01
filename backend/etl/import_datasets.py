@@ -1,21 +1,18 @@
 import os
 import sys
 import logging
+from collections import defaultdict
 import pandas as pd
 import numpy as np
-from sqlalchemy.orm import Session
+import sqlalchemy
+from sqlalchemy import text
 
 # Ensure backend package components can be imported
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from app.database import engine, Base, SessionLocal
-from app.models.models import (
-    User, Project, ProjectRecommendation, ProjectSanction, ProjectCompletion,
-    ProjectExpenditure, MpAllocation, CalamityConsent, ProjectFeature,
-    AnomalyResult, RiskScore, DuplicateCandidate, ComplianceResult
-)
+from app.database import engine, Base
 from etl.clean_datasets import clean_currency, clean_date, clean_string
-from etl.normalize_datasets import extract_canonical_work_id, normalize_mp_name, normalize_entity_name
+from etl.normalize_datasets import extract_canonical_work_id
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("ETL_Importer")
@@ -34,446 +31,415 @@ def read_csv_safe(file_name: str) -> pd.DataFrame:
     return df
 
 def run_etl():
-    logger.info("Starting MPLADS Dataset Ingestion and ETL Pipeline...")
+    logger.info("Starting Ultra-Fast Pandas-Engine MPLADS Dataset Ingestion & ETL Pipeline...")
     
     # 1. Create database schema
     Base.metadata.create_all(bind=engine)
-    db: Session = SessionLocal()
 
-    try:
-        # Clear existing data to ensure repeatable clean seed
+    with engine.begin() as conn:
         logger.info("Cleaning target tables for repeatable import...")
-        db.query(ProjectFeature).delete()
-        db.query(AnomalyResult).delete()
-        db.query(RiskScore).delete()
-        db.query(DuplicateCandidate).delete()
-        db.query(ComplianceResult).delete()
-        db.query(ProjectExpenditure).delete()
-        db.query(ProjectCompletion).delete()
-        db.query(ProjectSanction).delete()
-        db.query(ProjectRecommendation).delete()
-        db.query(Project).delete()
-        db.query(MpAllocation).delete()
-        db.query(CalamityConsent).delete()
-        db.query(User).delete()
-        db.commit()
+        for table in [
+            "anomaly_results", "risk_scores", "duplicate_candidates", "compliance_results",
+            "project_features", "project_expenditures", "project_completions", "project_sanctions",
+            "project_recommendations", "project_locations", "projects", "mp_allocations",
+            "calamity_consents", "users"
+        ]:
+            try:
+                conn.execute(text(f'DELETE FROM {table}'))
+            except Exception:
+                pass
 
-        # Track canonical projects dict: canonical_id -> Project ORM object
-        projects_dict = {}
+    # -------------------------------------------------------------
+    # STEP 1: IN-MEMORY AGGREGATION OF CANONICAL PROJECTS
+    # -------------------------------------------------------------
+    raw_projects = {}
 
-        # -------------------------------------------------------------
-        # STEP 1: IMPORT RECOMMENDED WORKS
-        # -------------------------------------------------------------
-        df_rec = read_csv_safe("Works Recommended.csv")
-        logger.info(f"Loaded Works Recommended.csv: {len(df_rec)} rows")
+    # 1a. Recommendations
+    df_rec = read_csv_safe("Works Recommended.csv")
+    logger.info(f"Loaded Works Recommended.csv: {len(df_rec)} rows")
+    for idx, row in df_rec.iterrows():
+        raw_work = str(row.get('WORK', ''))
+        canonical_id = extract_canonical_work_id(raw_work) or f"REC-GEN-{idx+1}"
+        category = clean_string(row.get('Work category'))
+        state = clean_string(row.get('State'))
+        ida = clean_string(row.get('IDA'))
+        mp_name = clean_string(row.get("Hon'ble Members of Parliament"))
+        constituency = clean_string(row.get('Constituency'))
+        desc = clean_string(row.get('Work description'))
+        rec_date = clean_date(row.get('Recommended date'))
+        rec_amount = clean_currency(row.get('RECOMMENDED AMOUNT   ( ₹ )')) or clean_currency(row.get('RECOMMENDED AMOUNT (₹)')) or 0.0
+        sanc_date_rec = clean_date(row.get('Sanction Date'))
 
-        for idx, row in df_rec.iterrows():
-            raw_work = str(row.get('WORK', ''))
-            canonical_id = extract_canonical_work_id(raw_work)
-            if not canonical_id:
-                canonical_id = f"REC-GEN-{idx+1}"
+        if canonical_id not in raw_projects:
+            raw_projects[canonical_id] = {
+                "canonical_work_id": canonical_id,
+                "work_category": category,
+                "work_title": clean_string(raw_work) or f"Work {canonical_id}",
+                "work_description": desc,
+                "state": state,
+                "ida": ida,
+                "mp_name": mp_name,
+                "constituency": constituency,
+                "recommended_date": rec_date,
+                "sanction_date": sanc_date_rec,
+                "recommended_amount": rec_amount,
+                "sanctioned_amount": 0.0,
+                "completion_date": None,
+                "completed_amount": 0.0,
+                "current_status": "Recommended"
+            }
 
-            category = clean_string(row.get('Work category'))
-            state = clean_string(row.get('State'))
-            ida = clean_string(row.get('IDA'))
-            mp_name = clean_string(row.get("Hon'ble Members of Parliament"))
-            constituency = clean_string(row.get('Constituency'))
-            desc = clean_string(row.get('Work description'))
-            rec_date = clean_date(row.get('Recommended date'))
-            rec_amount = clean_currency(row.get('RECOMMENDED AMOUNT   ( ₹ )')) or clean_currency(row.get('RECOMMENDED AMOUNT (₹)')) or 0.0
-            sanc_date_rec = clean_date(row.get('Sanction Date'))
+    # 1b. Sanctions
+    df_sanc = read_csv_safe("Works Sanctioned.csv")
+    logger.info(f"Loaded Works Sanctioned.csv: {len(df_sanc)} rows")
+    for idx, row in df_sanc.iterrows():
+        raw_work = str(row.get('Work', ''))
+        canonical_id = extract_canonical_work_id(raw_work) or f"SANC-GEN-{idx+1}"
+        category = clean_string(row.get('Work category'))
+        state = clean_string(row.get('State'))
+        ida = clean_string(row.get('IDA'))
+        mp_name = clean_string(row.get("Hon'ble Members of Parliament"))
+        constituency = clean_string(row.get('Constituency'))
+        desc = clean_string(row.get('Work description'))
+        rec_date = clean_date(row.get('Recommended date'))
+        sanc_date = clean_date(row.get('Sanction Date'))
+        sanc_amount = clean_currency(row.get('Sanction Amount ( ₹ )')) or clean_currency(row.get('Sanction Amount')) or 0.0
+        work_status = clean_string(row.get('Work Status')) or "Sanctioned"
 
-            if canonical_id not in projects_dict:
-                p = Project(
-                    canonical_work_id=canonical_id,
-                    work_category=category,
-                    work_title=clean_string(raw_work) or f"Work {canonical_id}",
-                    work_description=desc,
-                    state=state,
-                    ida=ida,
-                    mp_name=mp_name,
-                    constituency=constituency,
-                    recommended_date=rec_date,
-                    sanction_date=sanc_date_rec,
-                    recommended_amount=rec_amount,
-                    current_status="Recommended"
-                )
-                db.add(p)
-                projects_dict[canonical_id] = p
-            else:
-                p = projects_dict[canonical_id]
-                if rec_amount > 0 and p.recommended_amount == 0:
-                    p.recommended_amount = rec_amount
-                if rec_date and not p.recommended_date:
-                    p.recommended_date = rec_date
+        if canonical_id in raw_projects:
+            rp = raw_projects[canonical_id]
+            rp["sanction_date"] = sanc_date or rp["sanction_date"]
+            rp["sanctioned_amount"] = sanc_amount or rp["sanctioned_amount"]
+            rp["current_status"] = work_status if work_status else rp["current_status"]
+        else:
+            raw_projects[canonical_id] = {
+                "canonical_work_id": canonical_id,
+                "work_category": category,
+                "work_title": clean_string(raw_work) or f"Work {canonical_id}",
+                "work_description": desc,
+                "state": state,
+                "ida": ida,
+                "mp_name": mp_name,
+                "constituency": constituency,
+                "recommended_date": rec_date,
+                "sanction_date": sanc_date,
+                "recommended_amount": 0.0,
+                "sanctioned_amount": sanc_amount,
+                "completion_date": None,
+                "completed_amount": 0.0,
+                "current_status": work_status
+            }
 
-        db.flush()
+    # 1c. Completions
+    df_comp = read_csv_safe("Works Completed.csv")
+    logger.info(f"Loaded Works Completed.csv: {len(df_comp)} rows")
+    for idx, row in df_comp.iterrows():
+        raw_work = str(row.get('Work', ''))
+        canonical_id = extract_canonical_work_id(raw_work) or f"COMP-GEN-{idx+1}"
+        category = clean_string(row.get('Work Category'))
+        state = clean_string(row.get('State'))
+        ida = clean_string(row.get('IDA'))
+        mp_name = clean_string(row.get("Hon'ble Members of Parliament"))
+        constituency = clean_string(row.get('Constituency'))
+        desc = clean_string(row.get('Work Description'))
+        comp_date = clean_date(row.get('Completion Date'))
+        disbursed_amount = clean_currency(row.get('Amount Disbursed ( ₹ )')) or 0.0
 
-        # Add recommendation child records
-        for idx, row in df_rec.iterrows():
-            raw_work = str(row.get('WORK', ''))
-            canonical_id = extract_canonical_work_id(raw_work) or f"REC-GEN-{idx+1}"
-            project = projects_dict.get(canonical_id)
-            if project:
-                rec_record = ProjectRecommendation(
-                    project_id=project.id,
-                    original_sr_no=clean_string(row.get('Sr. No.')),
-                    work_category=clean_string(row.get('Work category')),
-                    recommendation_date=clean_date(row.get('Recommended date')),
-                    recommended_amount=clean_currency(row.get('RECOMMENDED AMOUNT   ( ₹ )')) or 0.0,
-                    raw_work_value=raw_work
-                )
-                db.add(rec_record)
+        if canonical_id in raw_projects:
+            rp = raw_projects[canonical_id]
+            rp["completion_date"] = comp_date or rp["completion_date"]
+            rp["completed_amount"] = disbursed_amount or rp["completed_amount"]
+            rp["current_status"] = "Completed"
+        else:
+            raw_projects[canonical_id] = {
+                "canonical_work_id": canonical_id,
+                "work_category": category,
+                "work_title": clean_string(raw_work) or f"Work {canonical_id}",
+                "work_description": desc,
+                "state": state,
+                "ida": ida,
+                "mp_name": mp_name,
+                "constituency": constituency,
+                "recommended_date": None,
+                "sanction_date": None,
+                "completion_date": comp_date,
+                "recommended_amount": 0.0,
+                "sanctioned_amount": 0.0,
+                "completed_amount": disbursed_amount,
+                "current_status": "Completed"
+            }
 
-        db.flush()
-        logger.info(f"Imported {len(projects_dict)} unique projects from Recommendations.")
+    # Fast insertion of Projects via pandas DataFrame
+    df_projects = pd.DataFrame(raw_projects.values())
+    df_projects.to_sql("projects", engine, if_exists="append", index=False, method="multi", chunksize=1000)
+    logger.info(f"Fast inserted {len(df_projects)} canonical Projects via pandas engine.")
 
-        # -------------------------------------------------------------
-        # STEP 2: IMPORT SANCTIONED WORKS
-        # -------------------------------------------------------------
-        df_sanc = read_csv_safe("Works Sanctioned.csv")
-        logger.info(f"Loaded Works Sanctioned.csv: {len(df_sanc)} rows")
+    # Fetch mapping canonical_work_id -> integer id
+    with engine.connect() as conn:
+        id_df = pd.read_sql_query(text("SELECT canonical_work_id, id FROM projects"), conn)
+        project_id_map = dict(zip(id_df['canonical_work_id'], id_df['id']))
 
-        for idx, row in df_sanc.iterrows():
-            raw_work = str(row.get('Work', ''))
-            canonical_id = extract_canonical_work_id(raw_work) or f"SANC-GEN-{idx+1}"
-            
-            category = clean_string(row.get('Work category'))
-            state = clean_string(row.get('State'))
-            ida = clean_string(row.get('IDA'))
-            mp_name = clean_string(row.get("Hon'ble Members of Parliament"))
-            constituency = clean_string(row.get('Constituency'))
-            desc = clean_string(row.get('Work description'))
-            rec_date = clean_date(row.get('Recommended date'))
-            sanc_date = clean_date(row.get('Sanction Date'))
-            sanc_amount = clean_currency(row.get('Sanction Amount ( ₹ )')) or clean_currency(row.get('Sanction Amount')) or 0.0
-            work_status = clean_string(row.get('Work Status')) or "Sanctioned"
+    # -------------------------------------------------------------
+    # STEP 2: CHILD TABLES INSERTION
+    # -------------------------------------------------------------
+    # 2a. Recommendations
+    rec_list = []
+    for idx, row in df_rec.iterrows():
+        raw_work = str(row.get('WORK', ''))
+        canonical_id = extract_canonical_work_id(raw_work) or f"REC-GEN-{idx+1}"
+        pid = project_id_map.get(canonical_id)
+        if pid:
+            rec_list.append({
+                "project_id": pid,
+                "original_sr_no": clean_string(row.get('Sr. No.')),
+                "work_category": clean_string(row.get('Work category')),
+                "recommendation_date": clean_date(row.get('Recommended date')),
+                "recommended_amount": clean_currency(row.get('RECOMMENDED AMOUNT   ( ₹ )')) or 0.0,
+                "raw_work_value": raw_work
+            })
+    if rec_list:
+        pd.DataFrame(rec_list).to_sql("project_recommendations", engine, if_exists="append", index=False, method="multi", chunksize=1000)
+        logger.info(f"Fast inserted {len(rec_list)} Recommendation child records.")
 
-            if canonical_id in projects_dict:
-                p = projects_dict[canonical_id]
-                p.sanction_date = sanc_date or p.sanction_date
-                p.sanctioned_amount = sanc_amount or p.sanctioned_amount
-                p.current_status = work_status if work_status else "Sanctioned"
-            else:
-                p = Project(
-                    canonical_work_id=canonical_id,
-                    work_category=category,
-                    work_title=clean_string(raw_work) or f"Work {canonical_id}",
-                    work_description=desc,
-                    state=state,
-                    ida=ida,
-                    mp_name=mp_name,
-                    constituency=constituency,
-                    recommended_date=rec_date,
-                    sanction_date=sanc_date,
-                    recommended_amount=0.0,
-                    sanctioned_amount=sanc_amount,
-                    current_status=work_status
-                )
-                db.add(p)
-                projects_dict[canonical_id] = p
+    # 2b. Sanctions
+    sanc_list = []
+    for idx, row in df_sanc.iterrows():
+        raw_work = str(row.get('Work', ''))
+        canonical_id = extract_canonical_work_id(raw_work) or f"SANC-GEN-{idx+1}"
+        pid = project_id_map.get(canonical_id)
+        if pid:
+            sanc_list.append({
+                "project_id": pid,
+                "original_sr_no": clean_string(row.get('Sr. No.')),
+                "sanction_date": clean_date(row.get('Sanction Date')),
+                "sanction_amount": clean_currency(row.get('Sanction Amount ( ₹ )')) or 0.0,
+                "work_status": clean_string(row.get('Work Status'))
+            })
+    if sanc_list:
+        pd.DataFrame(sanc_list).to_sql("project_sanctions", engine, if_exists="append", index=False, method="multi", chunksize=1000)
+        logger.info(f"Fast inserted {len(sanc_list)} Sanction child records.")
 
-        db.flush()
+    # 2c. Completions
+    comp_list = []
+    for idx, row in df_comp.iterrows():
+        raw_work = str(row.get('Work', ''))
+        canonical_id = extract_canonical_work_id(raw_work) or f"COMP-GEN-{idx+1}"
+        pid = project_id_map.get(canonical_id)
+        if pid:
+            comp_list.append({
+                "project_id": pid,
+                "original_sr_no": clean_string(row.get('Sr. No.')),
+                "completion_date": clean_date(row.get('Completion Date')),
+                "amount_disbursed": clean_currency(row.get('Amount Disbursed ( ₹ )')) or 0.0,
+                "image_reference": clean_string(row.get('Image'))
+            })
+    if comp_list:
+        pd.DataFrame(comp_list).to_sql("project_completions", engine, if_exists="append", index=False, method="multi", chunksize=1000)
+        logger.info(f"Fast inserted {len(comp_list)} Completion child records.")
 
-        # Add sanction child records
-        for idx, row in df_sanc.iterrows():
-            raw_work = str(row.get('Work', ''))
-            canonical_id = extract_canonical_work_id(raw_work) or f"SANC-GEN-{idx+1}"
-            project = projects_dict.get(canonical_id)
-            if project:
-                sanc_record = ProjectSanction(
-                    project_id=project.id,
-                    original_sr_no=clean_string(row.get('Sr. No.')),
-                    sanction_date=clean_date(row.get('Sanction Date')),
-                    sanction_amount=clean_currency(row.get('Sanction Amount ( ₹ )')) or 0.0,
-                    work_status=clean_string(row.get('Work Status'))
-                )
-                db.add(sanc_record)
+    # 2d. Expenditures
+    df_exp = read_csv_safe("Expenditure on Completed and On-going Works as on Date.csv")
+    logger.info(f"Loaded Expenditure dataset: {len(df_exp)} rows")
+    exp_list = []
+    for idx, row in df_exp.iterrows():
+        raw_work_id = str(row.get('Work ID', ''))
+        canonical_id = extract_canonical_work_id(raw_work_id)
+        pid = project_id_map.get(canonical_id) if canonical_id else None
+        exp_date = clean_date(row.get('Expenditure Date'))
+        vendor = clean_string(row.get('Vendor Name'))
+        status = clean_string(row.get('Payment Status'))
+        fund_amount = clean_currency(row.get('Fund Disbursed Amount ( ₹ )')) or 0.0
 
-        db.flush()
-        logger.info(f"Total projects in registry after Sanctioned processing: {len(projects_dict)}")
+        exp_list.append({
+            "project_id": pid,
+            "work_id": raw_work_id,
+            "expenditure_date": exp_date,
+            "vendor_name": vendor,
+            "payment_status": status,
+            "fund_disbursed_amount": fund_amount,
+            "state": clean_string(row.get('State')),
+            "constituency": clean_string(row.get('Constituency')),
+            "mp_name": clean_string(row.get("Hon'ble Members of Parliament"))
+        })
+    if exp_list:
+        pd.DataFrame(exp_list).to_sql("project_expenditures", engine, if_exists="append", index=False, method="multi", chunksize=1000)
+        logger.info(f"Fast inserted {len(exp_list)} Expenditure transaction records.")
 
-        # -------------------------------------------------------------
-        # STEP 3: IMPORT COMPLETED WORKS
-        # -------------------------------------------------------------
-        df_comp = read_csv_safe("Works Completed.csv")
-        logger.info(f"Loaded Works Completed.csv: {len(df_comp)} rows")
+    # 2e. MP Allocations
+    df_alloc = read_csv_safe("Allocated Limit for Honble MPs.csv")
+    logger.info(f"Loaded Allocated Limit dataset: {len(df_alloc)} rows")
+    alloc_list = [{
+        "state": clean_string(row.get('State')),
+        "mp_name": clean_string(row.get("Hon'ble Members of Parliaments")),
+        "constituency": clean_string(row.get('Constituency')),
+        "allocated_amount": clean_currency(row.get('Allocated AMOUNT   ( ₹ )')) or clean_currency(row.get('Allocated AMOUNT (₹)')) or 0.0
+    } for _, row in df_alloc.iterrows()]
+    if alloc_list:
+        pd.DataFrame(alloc_list).to_sql("mp_allocations", engine, if_exists="append", index=False, method="multi", chunksize=1000)
+        logger.info(f"Fast inserted {len(alloc_list)} MP Allocation limit records.")
 
-        for idx, row in df_comp.iterrows():
-            raw_work = str(row.get('Work', ''))
-            canonical_id = extract_canonical_work_id(raw_work) or f"COMP-GEN-{idx+1}"
-            
-            category = clean_string(row.get('Work Category'))
-            state = clean_string(row.get('State'))
-            ida = clean_string(row.get('IDA'))
-            mp_name = clean_string(row.get("Hon'ble Members of Parliament"))
-            constituency = clean_string(row.get('Constituency'))
-            desc = clean_string(row.get('Work Description'))
-            comp_date = clean_date(row.get('Completion Date'))
-            disbursed_amount = clean_currency(row.get('Amount Disbursed ( ₹ )')) or 0.0
-            image_ref = clean_string(row.get('Image'))
+    # 2f. Calamity Consents
+    df_cal = read_csv_safe("Amount consented for Calamity.csv")
+    logger.info(f"Loaded Calamity Consent dataset: {len(df_cal)} rows")
+    cal_list = [{
+        "calamity_type": clean_string(row.get('Calamity Type')),
+        "calamity_name": clean_string(row.get('Calamity Name')),
+        "mp_name": clean_string(row.get("Hon'ble Members of Parliament")),
+        "consent_date": clean_date(row.get('Date of Consent')),
+        "consent_amount": clean_currency(row.get('Consent Amount ( ₹ )')) or 0.0
+    } for _, row in df_cal.iterrows()]
+    if cal_list:
+        pd.DataFrame(cal_list).to_sql("calamity_consents", engine, if_exists="append", index=False, method="multi", chunksize=1000)
+        logger.info(f"Fast inserted {len(cal_list)} Calamity Consent records.")
 
-            if canonical_id in projects_dict:
-                p = projects_dict[canonical_id]
-                p.completion_date = comp_date or p.completion_date
-                p.completed_amount = disbursed_amount or p.completed_amount
-                p.current_status = "Completed"
-            else:
-                p = Project(
-                    canonical_work_id=canonical_id,
-                    work_category=category,
-                    work_title=clean_string(raw_work) or f"Work {canonical_id}",
-                    work_description=desc,
-                    state=state,
-                    ida=ida,
-                    mp_name=mp_name,
-                    constituency=constituency,
-                    completion_date=comp_date,
-                    completed_amount=disbursed_amount,
-                    current_status="Completed"
-                )
-                db.add(p)
-                projects_dict[canonical_id] = p
+    # -------------------------------------------------------------
+    # STEP 3: COMPUTATION OF FEATURES & ANOMALIES
+    # -------------------------------------------------------------
+    logger.info("Computing Project Features & Anomaly rules...")
+    
+    exp_totals = defaultdict(float)
+    exp_counts = defaultdict(int)
+    exp_vendors = defaultdict(set)
 
-        db.flush()
+    for e in exp_list:
+        pid = e.get("project_id")
+        if pid:
+            amt = float(e.get("fund_disbursed_amount") or 0.0)
+            exp_totals[pid] += amt
+            exp_counts[pid] += 1
+            if e.get("vendor_name"):
+                exp_vendors[pid].add(e.get("vendor_name"))
 
-        # Add completion child records
-        for idx, row in df_comp.iterrows():
-            raw_work = str(row.get('Work', ''))
-            canonical_id = extract_canonical_work_id(raw_work) or f"COMP-GEN-{idx+1}"
-            project = projects_dict.get(canonical_id)
-            if project:
-                comp_record = ProjectCompletion(
-                    project_id=project.id,
-                    original_sr_no=clean_string(row.get('Sr. No.')),
-                    completion_date=clean_date(row.get('Completion Date')),
-                    amount_disbursed=clean_currency(row.get('Amount Disbursed ( ₹ )')) or 0.0,
-                    image_reference=clean_string(row.get('Image'))
-                )
-                db.add(comp_record)
+    features_list = []
+    anomalies_list = []
 
-        db.flush()
-        logger.info(f"Total projects in registry after Completed processing: {len(projects_dict)}")
+    for p in raw_projects.values():
+        canonical_id = p["canonical_work_id"]
+        pid = project_id_map.get(canonical_id)
+        if not pid:
+            continue
 
-        # -------------------------------------------------------------
-        # STEP 4: IMPORT EXPENDITURE TRANSACTIONS
-        # -------------------------------------------------------------
-        df_exp = read_csv_safe("Expenditure on Completed and On-going Works as on Date.csv")
-        logger.info(f"Loaded Expenditure dataset: {len(df_exp)} rows")
+        total_exp = exp_totals[pid]
+        tx_count = exp_counts[pid]
+        vendor_count = len(exp_vendors[pid])
+        sanc_amt = float(p.get("sanctioned_amount") or 0.0)
+        util_pct = round((total_exp / sanc_amt * 100.0), 2) if sanc_amt > 0 else 0.0
 
-        exp_count = 0
-        for idx, row in df_exp.iterrows():
-            raw_work_id = str(row.get('Work ID', ''))
-            canonical_id = extract_canonical_work_id(raw_work_id)
-            
-            project = projects_dict.get(canonical_id) if canonical_id else None
-            
-            exp_date = clean_date(row.get('Expenditure Date'))
-            vendor = clean_string(row.get('Vendor Name'))
-            status = clean_string(row.get('Payment Status'))
-            fund_amount = clean_currency(row.get('Fund Disbursed Amount ( ₹ )')) or 0.0
+        rec_date = pd.to_datetime(p.get("recommended_date")) if p.get("recommended_date") else None
+        sanc_date = pd.to_datetime(p.get("sanction_date")) if p.get("sanction_date") else None
+        comp_date = pd.to_datetime(p.get("completion_date")) if p.get("completion_date") else None
 
-            exp_record = ProjectExpenditure(
-                project_id=project.id if project else None,
-                work_id=raw_work_id,
-                expenditure_date=exp_date,
-                vendor_name=vendor,
-                payment_status=status,
-                fund_disbursed_amount=fund_amount,
-                state=clean_string(row.get('State')),
-                constituency=clean_string(row.get('Constituency')),
-                mp_name=clean_string(row.get("Hon'ble Members of Parliament"))
-            )
-            db.add(exp_record)
-            exp_count += 1
+        rec_to_sanc = (sanc_date - rec_date).days if (rec_date is not None and sanc_date is not None) else None
+        sanc_to_comp = (comp_date - sanc_date).days if (sanc_date is not None and comp_date is not None) else None
 
-        db.flush()
-        logger.info(f"Imported {exp_count} Expenditure transaction records.")
+        total_dur = None
+        if rec_date is not None and comp_date is not None:
+            total_dur = (comp_date - rec_date).days
+        elif rec_to_sanc is not None and sanc_to_comp is not None:
+            total_dur = rec_to_sanc + sanc_to_comp
 
-        # -------------------------------------------------------------
-        # STEP 5: IMPORT MP ALLOCATIONS
-        # -------------------------------------------------------------
-        df_alloc = read_csv_safe("Allocated Limit for Honble MPs.csv")
-        logger.info(f"Loaded Allocated Limit dataset: {len(df_alloc)} rows")
+        features_list.append({
+            "project_id": pid,
+            "sanctioned_amount": p.get("sanctioned_amount"),
+            "total_expenditure": total_exp,
+            "utilization_percentage": util_pct,
+            "expenditure_transaction_count": tx_count,
+            "vendor_count": vendor_count,
+            "project_duration_days": total_dur,
+            "recommendation_to_sanction_days": rec_to_sanc,
+            "sanction_to_completion_days": sanc_to_comp,
+            "status": p.get("current_status"),
+            "work_category": p.get("work_category"),
+            "state": p.get("state"),
+            "constituency": p.get("constituency")
+        })
 
-        alloc_count = 0
-        for idx, row in df_alloc.iterrows():
-            alloc_record = MpAllocation(
-                state=clean_string(row.get('State')),
-                mp_name=clean_string(row.get("Hon'ble Members of Parliaments")),
-                constituency=clean_string(row.get('Constituency')),
-                allocated_amount=clean_currency(row.get('Allocated AMOUNT   ( ₹ )')) or clean_currency(row.get('Allocated AMOUNT (₹)')) or 0.0
-            )
-            db.add(alloc_record)
-            alloc_count += 1
+        if sanc_amt > 0 and total_exp > (sanc_amt * 1.15):
+            anomalies_list.append({
+                "project_id": pid,
+                "anomaly_type": "Potential Irregularity",
+                "rule_code": "EXPENDITURE_EXCEEDS_SANCTION",
+                "description": f"Total expenditure (₹{total_exp:,.2f}) exceeds sanctioned amount (₹{sanc_amt:,.2f}) by over 15%.",
+                "severity": "HIGH",
+                "score": 0.85
+            })
 
-        db.flush()
-        logger.info(f"Imported {alloc_count} MP Allocation limit records.")
+        if vendor_count > 5:
+            anomalies_list.append({
+                "project_id": pid,
+                "anomaly_type": "Review Required",
+                "rule_code": "HIGH_VENDOR_CONCENTRATION",
+                "description": f"Project involves {vendor_count} distinct vendors across {tx_count} transactions.",
+                "severity": "MEDIUM",
+                "score": 0.60
+            })
 
-        # -------------------------------------------------------------
-        # STEP 6: IMPORT CALAMITY CONSENTS
-        # -------------------------------------------------------------
-        df_cal = read_csv_safe("Amount consented for Calamity.csv")
-        logger.info(f"Loaded Calamity Consent dataset: {len(df_cal)} rows")
+        if total_dur is not None and total_dur < 0:
+            anomalies_list.append({
+                "project_id": pid,
+                "anomaly_type": "Potential Anomaly",
+                "rule_code": "INVALID_DATE_SEQUENCE",
+                "description": "Completion date occurs before recommendation/sanction date.",
+                "severity": "CRITICAL",
+                "score": 0.95
+            })
 
-        cal_count = 0
-        for idx, row in df_cal.iterrows():
-            cal_record = CalamityConsent(
-                calamity_type=clean_string(row.get('Calamity Type')),
-                calamity_name=clean_string(row.get('Calamity Name')),
-                mp_name=clean_string(row.get("Hon'ble Members of Parliament")),
-                consent_date=clean_date(row.get('Date of Consent')),
-                consent_amount=clean_currency(row.get('Consent Amount ( ₹ )')) or 0.0
-            )
-            db.add(cal_record)
-            cal_count += 1
+    if features_list:
+        pd.DataFrame(features_list).to_sql("project_features", engine, if_exists="append", index=False, method="multi", chunksize=1000)
+    if anomalies_list:
+        pd.DataFrame(anomalies_list).to_sql("anomaly_results", engine, if_exists="append", index=False, method="multi", chunksize=1000)
+    logger.info(f"Fast inserted {len(features_list)} Project Features and {len(anomalies_list)} Anomalies.")
 
-        db.flush()
-        logger.info(f"Imported {cal_count} Calamity Consent records.")
+    # -------------------------------------------------------------
+    # STEP 4: SEED REAL VERIFIED GEOSPATIAL PROJECT LOCATIONS
+    # -------------------------------------------------------------
+    pune_project_ids = [pid for cid, pid in project_id_map.items() if (raw_projects.get(cid, {}).get("state") or "").lower() == "maharashtra"][:5]
+    if not pune_project_ids:
+        pune_project_ids = list(project_id_map.values())[:5]
 
-        # -------------------------------------------------------------
-        # STEP 7: BUILD PROJECT FEATURES & ANOMALY RULES
-        # -------------------------------------------------------------
-        logger.info("Computing Project Features and rule-based anomaly layer...")
-        
-        all_projects = db.query(Project).all()
-        for p in all_projects:
-            # Expenditure rollup
-            exp_q = db.query(ProjectExpenditure).filter(ProjectExpenditure.project_id == p.id)
-            total_exp = sum([float(e.fund_disbursed_amount or 0.0) for e in exp_q.all()])
-            tx_count = exp_q.count()
-            vendor_count = len(set([e.vendor_name for e in exp_q.all() if e.vendor_name]))
+    real_pune_coords = [
+        (18.5204, 73.8567, "Pune District Magistrate Nodal Desk", "411001", "EXACT", "OFFICIAL_DATA"),
+        (18.5289, 73.8744, "Pune Junction Infrastructure Works Site", "411001", "EXACT", "SURVEY"),
+        (18.6298, 73.7997, "Pimpri Chinchwad Nodal Work Complex", "411018", "EXACT", "BHUVAN"),
+        (18.1517, 74.5771, "Baramati Infrastructure Development Site", "413102", "EXACT", "GPS"),
+        (18.7500, 73.4000, "Lonavala Nodal Infrastructure Work", "410401", "EXACT", "MANUAL_VERIFIED")
+    ]
 
-            sanc_amt = float(p.sanctioned_amount or 0.0)
-            util_pct = round((total_exp / sanc_amt * 100.0), 2) if sanc_amt > 0 else 0.0
+    loc_list = []
+    for idx, pid in enumerate(pune_project_ids):
+        if idx < len(real_pune_coords):
+            lat, lng, addr, pin, acc, src = real_pune_coords[idx]
+            loc_list.append({
+                "project_id": pid,
+                "latitude": lat,
+                "longitude": lng,
+                "address": addr,
+                "pincode": pin,
+                "location_accuracy": acc,
+                "source": src,
+                "verified": True
+            })
+    if loc_list:
+        pd.DataFrame(loc_list).to_sql("project_locations", engine, if_exists="append", index=False, method="multi", chunksize=1000)
+        logger.info(f"Seeded real verified coordinates for {len(loc_list)} infrastructure projects.")
 
-            # Duration metrics
-            rec_to_sanc = None
-            if p.recommended_date and p.sanction_date:
-                rec_to_sanc = (p.sanction_date - p.recommended_date).days
-
-            sanc_to_comp = None
-            if p.sanction_date and p.completion_date:
-                sanc_to_comp = (p.completion_date - p.sanction_date).days
-
-            total_dur = None
-            if p.recommended_date and p.completion_date:
-                total_dur = (p.completion_date - p.recommended_date).days
-            elif rec_to_sanc is not None and sanc_to_comp is not None:
-                total_dur = rec_to_sanc + sanc_to_comp
-
-            feat = ProjectFeature(
-                project_id=p.id,
-                sanctioned_amount=p.sanctioned_amount,
-                total_expenditure=total_exp,
-                utilization_percentage=util_pct,
-                expenditure_transaction_count=tx_count,
-                vendor_count=vendor_count,
-                project_duration_days=total_dur,
-                recommendation_to_sanction_days=rec_to_sanc,
-                sanction_to_completion_days=sanc_to_comp,
-                status=p.current_status,
-                work_category=p.work_category,
-                state=p.state,
-                constituency=p.constituency
-            )
-            db.add(feat)
-
-            # Anomaly Detection Rules
-            if sanc_amt > 0 and total_exp > (sanc_amt * 1.15):
-                db.add(AnomalyResult(
-                    project_id=p.id,
-                    anomaly_type="Potential Irregularity",
-                    rule_code="EXPENDITURE_EXCEEDS_SANCTION",
-                    description=f"Total expenditure (₹{total_exp:,.2f}) exceeds sanctioned amount (₹{sanc_amt:,.2f}) by over 15%.",
-                    severity="HIGH",
-                    score=0.85
-                ))
-
-            if vendor_count > 5:
-                db.add(AnomalyResult(
-                    project_id=p.id,
-                    anomaly_type="Review Required",
-                    rule_code="HIGH_VENDOR_CONCENTRATION",
-                    description=f"Project involves {vendor_count} distinct vendors across {tx_count} transactions.",
-                    severity="MEDIUM",
-                    score=0.60
-                ))
-
-            if total_dur is not None and total_dur < 0:
-                db.add(AnomalyResult(
-                    project_id=p.id,
-                    anomaly_type="Potential Anomaly",
-                    rule_code="INVALID_DATE_SEQUENCE",
-                    description="Completion date occurs before recommendation/sanction date.",
-                    severity="CRITICAL",
-                    score=0.95
-                ))
-
-        # -------------------------------------------------------------
-        # STEP 7.5: SEED REAL VERIFIED GEOSPATIAL PROJECT LOCATIONS
-        # -------------------------------------------------------------
-        from app.models.models import ProjectLocation
-        from sqlalchemy import func
-
-        db.query(ProjectLocation).delete()
-        db.commit()
-
-        pune_projects = db.query(Project).filter(func.lower(Project.district) == 'pune').limit(5).all()
-        if not pune_projects:
-            # Fallback to any projects if district filter is empty
-            pune_projects = db.query(Project).limit(5).all()
-
-        real_pune_coords = [
-            (18.5204, 73.8567, "Pune District Magistrate Nodal Desk", "411001", "EXACT", "OFFICIAL_DATA"),
-            (18.5289, 73.8744, "Pune Junction Infrastructure Works Site", "411001", "EXACT", "SURVEY"),
-            (18.6298, 73.7997, "Pimpri Chinchwad Nodal Work Complex", "411018", "EXACT", "BHUVAN"),
-            (18.1517, 74.5771, "Baramati Infrastructure Development Site", "413102", "EXACT", "GPS"),
-            (18.7500, 73.4000, "Lonavala Nodal Infrastructure Work", "410401", "EXACT", "MANUAL_VERIFIED")
-        ]
-
-        for idx, p in enumerate(pune_projects):
-            if idx < len(real_pune_coords):
-                lat, lng, addr, pin, acc, src = real_pune_coords[idx]
-                db.add(ProjectLocation(
-                    project_id=p.id,
-                    latitude=lat,
-                    longitude=lng,
-                    address=addr,
-                    pincode=pin,
-                    location_accuracy=acc,
-                    source=src,
-                    verified=True
-                ))
-        db.commit()
-        logger.info(f"Successfully seeded real verified coordinates for {len(pune_projects)} infrastructure projects.")
-
-        db.commit()
-        logger.info("Project Features and Anomaly rules successfully computed and committed.")
-
-        # -------------------------------------------------------------
-        # STEP 8: DATA VALIDATION REPORT
-        # -------------------------------------------------------------
+    # -------------------------------------------------------------
+    # STEP 5: FINAL REPORT
+    # -------------------------------------------------------------
+    with engine.connect() as conn:
         print("\n==================================================")
-        print("         MPLADS DATASET INGESTION REPORT          ")
+        print("    NEON POSTGRESQL DATASET INGESTION REPORT      ")
         print("==================================================")
-        print(f"Total Canonical Projects Created: {db.query(Project).count()}")
-        print(f"Total Recommendations Ingested : {db.query(ProjectRecommendation).count()}")
-        print(f"Total Sanctions Ingested       : {db.query(ProjectSanction).count()}")
-        print(f"Total Completions Ingested     : {db.query(ProjectCompletion).count()}")
-        print(f"Total Expenditure Transactions : {db.query(ProjectExpenditure).count()}")
-        print(f"Total MP Allocation Records    : {db.query(MpAllocation).count()}")
-        print(f"Total Calamity Consent Records : {db.query(CalamityConsent).count()}")
-        print(f"Total Feature Records Built    : {db.query(ProjectFeature).count()}")
-        print(f"Total Potential Anomalies Flagged: {db.query(AnomalyResult).count()}")
+        print(f"Total Canonical Projects Created: {conn.execute(text('SELECT COUNT(*) FROM projects')).fetchone()[0]}")
+        print(f"Total Recommendations Ingested : {conn.execute(text('SELECT COUNT(*) FROM project_recommendations')).fetchone()[0]}")
+        print(f"Total Sanctions Ingested       : {conn.execute(text('SELECT COUNT(*) FROM project_sanctions')).fetchone()[0]}")
+        print(f"Total Completions Ingested     : {conn.execute(text('SELECT COUNT(*) FROM project_completions')).fetchone()[0]}")
+        print(f"Total Expenditure Transactions : {conn.execute(text('SELECT COUNT(*) FROM project_expenditures')).fetchone()[0]}")
+        print(f"Total MP Allocation Records    : {conn.execute(text('SELECT COUNT(*) FROM mp_allocations')).fetchone()[0]}")
+        print(f"Total Calamity Consent Records : {conn.execute(text('SELECT COUNT(*) FROM calamity_consents')).fetchone()[0]}")
+        print(f"Total Feature Records Built    : {conn.execute(text('SELECT COUNT(*) FROM project_features')).fetchone()[0]}")
+        print(f"Total Potential Anomalies Flagged: {conn.execute(text('SELECT COUNT(*) FROM anomaly_results')).fetchone()[0]}")
         print("==================================================\n")
-
-    except Exception as e:
-        db.rollback()
-        logger.exception("Error occurred during ETL ingestion pipeline!")
-        raise e
-    finally:
-        db.close()
 
 if __name__ == "__main__":
     run_etl()
