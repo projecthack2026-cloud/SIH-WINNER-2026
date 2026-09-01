@@ -46,11 +46,14 @@ class Settings:
     PROJECT_NAME: str = "MPLADS AI Monitor — Infrastructure Monitoring & Accountability"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api"
+    ENV: str = os.getenv("ENV", "development").lower()
+    IS_PRODUCTION: bool = (ENV == "production") or (os.getenv("RENDER") is not None)
     
-    DATABASE_URL: str = os.getenv(
-        "DATABASE_URL", 
-        f"sqlite:///{DEFAULT_DB_PATH}"
-    )
+    _raw_db_url: str = os.getenv("DATABASE_URL", "").strip()
+    if IS_PRODUCTION and (not _raw_db_url or _raw_db_url.startswith("sqlite")):
+        raise RuntimeError("Production mode requires PostgreSQL DATABASE_URL. SQLite is strictly prohibited in production.")
+        
+    DATABASE_URL: str = _raw_db_url if _raw_db_url else f"sqlite:///{DEFAULT_DB_PATH}"
     
     CORS_ORIGINS: list[str] = parse_cors_origins()
     CORS_ORIGIN_REGEX: str = os.getenv(

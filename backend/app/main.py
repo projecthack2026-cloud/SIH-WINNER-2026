@@ -47,7 +47,51 @@ def root():
 @app.get("/health")
 @app.get(f"{settings.API_V1_STR}/health")
 def health_check():
-    return {"status": "ok"}
+    db_type = "postgresql" if settings.DATABASE_URL.startswith(("postgresql", "postgres")) else "sqlite"
+    connected = False
+    try:
+        with engine.connect() as conn:
+            connected = True
+    except Exception:
+        connected = False
+
+    return {
+        "status": "ok" if connected else "degraded",
+        "database": "connected" if connected else "disconnected",
+        "database_type": db_type
+    }
+
+@app.get("/admin/system/database")
+@app.get(f"{settings.API_V1_STR}/admin/system/database")
+def get_system_database_diagnostics():
+    db_type = "postgresql" if settings.DATABASE_URL.startswith(("postgresql", "postgres")) else "sqlite"
+    connected = False
+    table_counts = {}
+
+    try:
+        from sqlalchemy import text
+        with engine.connect() as conn:
+            connected = True
+            tables = [
+                "users", "projects", "project_recommendations", "project_sanctions",
+                "project_completions", "project_expenditures", "mp_allocations",
+                "calamity_consents", "project_features", "anomaly_results",
+                "risk_scores", "project_locations", "citizen_complaints", "audit_logs"
+            ]
+            for t in tables:
+                try:
+                    res = conn.execute(text(f"SELECT COUNT(*) FROM {t}"))
+                    table_counts[t] = res.scalar() or 0
+                except Exception:
+                    table_counts[t] = 0
+    except Exception as e:
+        connected = False
+
+    return {
+        "database_type": db_type,
+        "connected": connected,
+        "tables": table_counts
+    }
 
 if __name__ == "__main__":
     import uvicorn

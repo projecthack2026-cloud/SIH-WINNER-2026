@@ -121,13 +121,13 @@ def run_location_processing(limit: Optional[int] = None) -> dict:
                 db.add(loc)
 
             loc.location_text = location_text
-            loc.village = village
-            loc.locality = locality
-            loc.taluka = taluka
-            loc.from_location = from_loc
-            loc.to_location = to_loc
-            loc.location_status = status
-            loc.confidence_score = conf
+            loc.village = village[:250] if village else None
+            loc.locality = locality[:250] if locality else None
+            loc.taluka = taluka[:250] if taluka else None
+            loc.from_location = from_loc[:250] if from_loc else None
+            loc.to_location = to_loc[:250] if to_loc else None
+            loc.location_status = status[:95] if status else "NOT_PROCESSED"
+            loc.confidence_score = conf[:45] if conf else "UNKNOWN"
             if not loc.source or loc.source == "OFFICIAL_DATA":
                 loc.source = "WORK_DESCRIPTION"
 

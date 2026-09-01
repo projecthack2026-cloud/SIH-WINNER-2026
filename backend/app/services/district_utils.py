@@ -20,16 +20,30 @@ def ensure_districts_populated(db: Session):
         result = db.execute(text("SELECT COUNT(*) FROM projects WHERE district IS NULL OR district = ''"))
         missing_count = result.scalar() or 0
         if missing_count > 0:
-            db.execute(text("""
-                UPDATE projects 
-                SET district = TRIM(
-                    CASE 
-                        WHEN instr(ida, '(') > 1 THEN substr(ida, 1, instr(ida, '(') - 1)
-                        ELSE ida
-                    END
-                )
-                WHERE ida IS NOT NULL AND ida != '' AND (district IS NULL OR district = '');
-            """))
+            dialect_name = db.bind.dialect.name if db.bind else "postgresql"
+            if dialect_name == "postgresql":
+                sql = """
+                    UPDATE projects 
+                    SET district = TRIM(
+                        CASE 
+                            WHEN STRPOS(ida, '(') > 1 THEN SUBSTR(ida, 1, STRPOS(ida, '(') - 1)
+                            ELSE ida
+                        END
+                    )
+                    WHERE ida IS NOT NULL AND ida != '' AND (district IS NULL OR district = '');
+                """
+            else:
+                sql = """
+                    UPDATE projects 
+                    SET district = TRIM(
+                        CASE 
+                            WHEN instr(ida, '(') > 1 THEN substr(ida, 1, instr(ida, '(') - 1)
+                            ELSE ida
+                        END
+                    )
+                    WHERE ida IS NOT NULL AND ida != '' AND (district IS NULL OR district = '');
+                """
+            db.execute(text(sql))
             db.commit()
     except Exception as e:
         db.rollback()
