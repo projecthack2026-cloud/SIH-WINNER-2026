@@ -62,7 +62,7 @@ class ProjectRecommendation(Base):
     __tablename__ = "project_recommendations"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    project_id = Column(Integer, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True)
+    project_id = Column(Integer, ForeignKey("projects.id", ondelete="SET NULL"), nullable=True, index=True)
     original_sr_no = Column(String(100), nullable=True)
     work_category = Column(String(255), nullable=True)
     recommendation_date = Column(Date, nullable=True)
