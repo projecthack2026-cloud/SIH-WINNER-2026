@@ -60,7 +60,7 @@ export const RiskBreakdownCard: React.FC<Props> = ({ projectId }) => {
         });
         setLoading(false);
       })
-      .catch((err) => {
+      .catch(() => {
         if (!isMounted) return;
         setError("Unable to load live data.");
         setLoading(false);

@@ -24,15 +24,16 @@ export const AlertCenterTable: React.FC = () => {
           title: item.anomaly_type || "Potential Anomaly",
           description: item.description || "AI Anomaly detection trigger.",
           severity: item.severity === 'HIGH' || item.severity === 'CRITICAL' ? 'Critical' : 'Medium',
-          category: 'AI Financial Audit',
+          category: 'Payment Anomaly',
           jurisdiction: `${item.district || item.state || 'National'} (MP: ${item.mp_name || 'N/A'})`,
-          status: 'Under Investigation',
-          date: item.created_at ? item.created_at.split('T')[0] : '2026-09-02'
+          status: 'Investigating',
+          date: item.created_at ? item.created_at.split('T')[0] : '2026-09-02',
+          createdAt: item.created_at ? item.created_at.split('T')[0] : '2026-09-02'
         }));
         setAlerts(mapped);
         setLoading(false);
       })
-      .catch((err) => {
+      .catch(() => {
         if (!isMounted) return;
         setError("Unable to load live data.");
         setLoading(false);

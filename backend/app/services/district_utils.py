@@ -12,6 +12,40 @@ def extract_district_from_ida(ida: Optional[str]) -> Optional[str]:
         return match.group(1).strip()
     return ida_clean
 
+def normalize_district_name(district_param: Optional[str]) -> str:
+    """
+    Normalizes district strings (e.g. 'Pune District', 'Pune (District)', 'pune (20)', 'PUNE')
+    to uppercase canonical district name ('PUNE').
+    """
+    if not district_param or not isinstance(district_param, str) or not district_param.strip():
+        return ""
+    d = district_param.strip()
+    d = re.sub(r"\s*\(\s*\d+\s*\)\s*$", "", d, flags=re.IGNORECASE).strip()
+    d = re.sub(r"\s+district\b", "", d, flags=re.IGNORECASE).strip()
+    d = re.sub(r"\s*\(\s*district\s*\)", "", d, flags=re.IGNORECASE).strip()
+    return d.upper()
+
+def apply_district_filter_to_query(query, district_param: Optional[str], project_model=None):
+    """
+    Applies district filtering to a SQLAlchemy query matching administrative district & IDA fields.
+    Does NOT mix electoral constituency with administrative district.
+    """
+    clean_d = normalize_district_name(district_param)
+    if not clean_d:
+        return query
+    d_lower = clean_d.lower()
+    from sqlalchemy import func, or_
+    if project_model is None:
+        from app.models.models import Project
+        project_model = Project
+    return query.filter(
+        or_(
+            func.lower(project_model.district) == d_lower,
+            func.lower(project_model.district).like(f"%{d_lower}%"),
+            func.lower(project_model.ida).like(f"%{d_lower}%")
+        )
+    )
+
 def ensure_districts_populated(db: Session):
     """
     Ensures projects.district column is populated from projects.ida if district is NULL/empty.

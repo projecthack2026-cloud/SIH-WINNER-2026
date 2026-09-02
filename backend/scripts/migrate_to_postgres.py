@@ -40,6 +40,14 @@ def read_csv_safe(file_name: str) -> pd.DataFrame:
         df = pd.read_csv(path, encoding='latin1')
     return df
 
+def is_valid_csv_data_row(row):
+    sr_no = str(row.get('Sr. No.', '')).strip()
+    if not sr_no or sr_no.lower() in ('grand total', 'total', 'subtotal'):
+        return False
+    if not sr_no.replace('.', '', 1).isdigit():
+        return False
+    return True
+
 def print_banner():
     print("==================================================")
     print("DATABASE TARGET:")
@@ -190,6 +198,8 @@ def migrate_to_postgres():
         df_comp = read_csv_safe("Works Completed.csv")
         comp_rows = len(df_comp)
         for idx, row in df_comp.iterrows():
+            if not is_valid_csv_data_row(row):
+                continue
             raw_work = str(row.get('Work', ''))
             canonical_id = extract_canonical_work_id(raw_work) or f"COMP-GEN-{idx+1}"
             category = clean_string(row.get('Work category'))
@@ -272,7 +282,7 @@ def migrate_to_postgres():
                 c_id = extract_canonical_work_id(work_val)
                 p_id = proj_map.get(c_id) if c_id else None
                 exp_date = clean_date(row.get('Expenditure Date'))
-                amt = clean_currency(row.get('Fund Disbursed ( ₹ )')) or clean_currency(row.get('Fund Disbursed (₹)')) or 0.0
+                amt = clean_currency(row.get('Fund Disbursed Amount ( ₹ )')) or clean_currency(row.get('Fund Disbursed Amount (₹)')) or clean_currency(row.get('Fund Disbursed ( ₹ )')) or clean_currency(row.get('Fund Disbursed (₹)')) or 0.0
                 vendor = clean_string(row.get('Vendor Name'))
                 status_val = clean_string(row.get('Status'))
                 st = clean_string(row.get('State'))

@@ -122,12 +122,29 @@ export const BhuvanGeospatialMap: React.FC<Props> = ({
     loadInitialMeta();
   }, []);
 
+  const normalizeDistrictName = (raw: string): string => {
+    if (!raw) return '';
+    return raw
+      .replace(/\s*\(\s*\d+\s*\)\s*$/i, '')
+      .replace(/\s+district\b/i, '')
+      .replace(/\s*\(\s*district\s*\)/i, '')
+      .trim()
+      .toUpperCase();
+  };
+
   // Update district dropdown options when state changes
   useEffect(() => {
     const loadDistricts = async () => {
       try {
         const dists = await api.getMapDistricts(selectedState || undefined);
         setDistrictsList(dists || []);
+        if (dists && dists.length > 0) {
+          const normSelected = normalizeDistrictName(selectedDistrict);
+          const match = dists.find(d => normalizeDistrictName(d.district) === normSelected || d.district.toUpperCase().includes(normSelected));
+          if (match && match.district !== selectedDistrict) {
+            setSelectedDistrict(match.district);
+          }
+        }
       } catch (err) {
         console.error("Failed to load district options:", err);
       }

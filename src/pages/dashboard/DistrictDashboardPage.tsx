@@ -36,8 +36,8 @@ export const DistrictDashboardPage: React.FC = () => {
     try {
       const [sumRes, projRes, anomalyRes] = await Promise.all([
         api.getDashboardSummary({ district: districtName }),
-        api.getProjects({ limit: 100 }),
-        api.getAnomalies({ limit: 100 })
+        api.getProjects({ district: districtName, limit: 100 }),
+        api.getAnomalies({ district: districtName, limit: 100 })
       ]);
       setSummary(sumRes);
       setProjects((projRes || []).map(mapApiProjectToMockProject));

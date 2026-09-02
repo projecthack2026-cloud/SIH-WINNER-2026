@@ -12,7 +12,7 @@ from app.schemas.map import (
     DistrictSummaryResponse, DistrictItem, StateItem, BhuvanConfigResponse,
     LocationProcessingStatsResponse, LocationQualitySummaryResponse
 )
-from app.services.district_utils import ensure_districts_populated
+from app.services.district_utils import ensure_districts_populated, normalize_district_name, apply_district_filter_to_query
 
 router = APIRouter(prefix="/map", tags=["Geospatial Map"])
 
@@ -416,7 +416,18 @@ def get_district_map_summary(
 
     total_sanc_amt = float(query.with_entities(func.coalesce(func.sum(Project.sanctioned_amount), 0.0)).scalar() or 0.0)
 
-    exp_query = db.query(ProjectExpenditure).filter(func.lower(ProjectExpenditure.state) == matched_state.lower()) if matched_state else db.query(ProjectExpenditure)
+    norm_dist = normalize_district_name(district)
+    dist_cids = [p.canonical_work_id for p in query.all() if p.canonical_work_id]
+    exp_query = db.query(ProjectExpenditure)
+    if matched_state:
+        exp_query = exp_query.filter(func.lower(ProjectExpenditure.state) == matched_state.lower())
+    filters = []
+    if norm_dist:
+        filters.append(func.lower(ProjectExpenditure.ida).like(f"%{norm_dist.lower()}%"))
+    if dist_cids:
+        filters.append(ProjectExpenditure.work_id.in_(dist_cids))
+    if filters:
+        exp_query = exp_query.filter(or_(*filters))
     total_exp_amt = float(exp_query.with_entities(func.coalesce(func.sum(ProjectExpenditure.fund_disbursed_amount), 0.0)).scalar() or 0.0)
 
     util_rate = round((total_exp_amt / total_sanc_amt * 100.0), 2) if total_sanc_amt > 0 else 0.0

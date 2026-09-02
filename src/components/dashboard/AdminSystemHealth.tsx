@@ -37,7 +37,7 @@ export const AdminSystemHealth: React.FC = () => {
         setTelemetry(mapped);
         setLoading(false);
       })
-      .catch((err) => {
+      .catch(() => {
         if (!isMounted) return;
         setError("Unable to load live telemetry data.");
         setLoading(false);

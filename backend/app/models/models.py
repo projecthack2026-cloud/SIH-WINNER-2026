@@ -112,6 +112,7 @@ class ProjectExpenditure(Base):
     payment_status = Column(String(100), nullable=True)
     fund_disbursed_amount = Column(Numeric(15, 2), nullable=True)
     state = Column(String(100), index=True, nullable=True)
+    ida = Column(String(255), index=True, nullable=True)
     constituency = Column(String(100), index=True, nullable=True)
     mp_name = Column(String(255), index=True, nullable=True)
     source_file = Column(String(255), default="Expenditure on Completed and On-going Works as on Date.csv")

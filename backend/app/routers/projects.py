@@ -11,9 +11,12 @@ from app.schemas.project import (
 
 router = APIRouter(prefix="/projects", tags=["Projects"])
 
+from app.services.district_utils import apply_district_filter_to_query
+
 @router.get("", response_model=List[ProjectResponse])
 def get_projects(
     state: Optional[str] = Query(None, description="Filter by state"),
+    district: Optional[str] = Query(None, description="Filter by district name"),
     constituency: Optional[str] = Query(None, description="Filter by constituency"),
     mp: Optional[str] = Query(None, description="Filter by MP name"),
     status: Optional[str] = Query(None, description="Filter by current status"),
@@ -26,6 +29,8 @@ def get_projects(
     
     if state:
         query = query.filter(func.lower(Project.state) == state.lower())
+    if district:
+        query = apply_district_filter_to_query(query, district, Project)
     if constituency:
         query = query.filter(func.lower(Project.constituency) == constituency.lower())
     if mp:

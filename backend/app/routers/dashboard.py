@@ -6,6 +6,8 @@ from app.database import get_db
 from app.models.models import Project, ProjectExpenditure, MpAllocation, CalamityConsent
 from app.schemas.project import DashboardSummaryResponse
 
+from app.services.district_utils import normalize_district_name, apply_district_filter_to_query
+
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
 @router.get("", response_model=DashboardSummaryResponse)
@@ -25,7 +27,16 @@ def get_dashboard_summary(
         query_p = query_p.filter(func.lower(Project.state) == state.lower())
         query_e = query_e.filter(func.lower(ProjectExpenditure.state) == state.lower())
     if district:
-        query_p = query_p.filter(func.lower(Project.district) == district.lower())
+        query_p = apply_district_filter_to_query(query_p, district, Project)
+        norm_dist = normalize_district_name(district)
+        dist_cids = [p.canonical_work_id for p in query_p.all() if p.canonical_work_id]
+        filters = []
+        if norm_dist:
+            filters.append(func.lower(ProjectExpenditure.ida).like(f"%{norm_dist.lower()}%"))
+        if dist_cids:
+            filters.append(ProjectExpenditure.work_id.in_(dist_cids))
+        if filters:
+            query_e = query_e.filter(or_(*filters))
     if constituency:
         query_p = query_p.filter(func.lower(Project.constituency) == constituency.lower())
         query_e = query_e.filter(func.lower(ProjectExpenditure.constituency) == constituency.lower())
@@ -90,8 +101,12 @@ def get_district_dashboard(
         query_p = query_p.filter(func.lower(Project.constituency) == target_dist.lower())
         query_e = query_e.filter(func.lower(ProjectExpenditure.constituency) == target_dist.lower())
     else:
-        query_p = query_p.filter(func.lower(Project.district) == target_dist.lower())
-        query_e = query_e.filter(func.lower(ProjectExpenditure.state) == state.lower()) if state else query_e
+        query_p = apply_district_filter_to_query(query_p, target_dist, Project)
+        query_e = apply_district_filter_to_query(
+            query_e.join(Project, ProjectExpenditure.project_id == Project.id),
+            target_dist,
+            Project
+        )
 
     if state:
         query_p = query_p.filter(func.lower(Project.state) == state.lower())
