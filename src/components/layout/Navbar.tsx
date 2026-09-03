@@ -1,32 +1,34 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useLanguage } from '../../context/LanguageContext';
+import type { Language } from '../../locales/translations';
 import { 
   Menu, 
   X, 
   Globe, 
   HelpCircle,
-  ChevronRight,
   Eye,
   UserCheck,
-  PlusCircle
+  PlusCircle,
+  ChevronRight
 } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [selectedLang, setSelectedLang] = useState('English');
   const [fontSize, setFontSize] = useState<'normal' | 'large' | 'xlarge'>('normal');
   const location = useLocation();
+  const { language, setLanguage, t } = useLanguage();
 
   const isActive = (path: string) => location.pathname === path;
 
   const navLinks = [
-    { label: 'Home', path: '/' },
-    { label: 'About Us', path: '/about' },
-    { label: 'Explore', path: '/explore' },
-    { label: 'How It Works', path: '/how-it-works' },
-    { label: 'Citizen Report', path: '/report' },
-    { label: 'Track Complaint', path: '/report/track' },
-    { label: 'Sign In', path: '/signin' },
+    { label: t.nav.home, path: '/' },
+    { label: t.nav.about, path: '/about' },
+    { label: t.nav.explore, path: '/explore' },
+    { label: t.nav.howItWorks, path: '/how-it-works' },
+    { label: t.nav.citizenReport, path: '/report' },
+    { label: t.nav.trackComplaint, path: '/report/track' },
+    { label: t.nav.signIn, path: '/signin' },
   ];
 
   return (
@@ -39,12 +41,12 @@ export const Navbar: React.FC = () => {
           <div className="flex items-center gap-2 font-medium">
             <span className="h-2 w-2 rounded-full bg-[#1558A6]"></span>
             <span className="font-semibold text-[#1F2937] text-[11px] sm:text-xs">
-              Government Digital Infrastructure Monitoring Platform
+              {t.nav.topPlatformLabel}
             </span>
           </div>
 
-          <div className="hidden md:flex items-center gap-4 text-[#64748B]">
-            <div className="flex items-center gap-1.5 text-[11px]">
+          <div className="flex items-center gap-4 text-[#64748B]">
+            <div className="hidden md:flex items-center gap-1.5 text-[11px]">
               <span className="text-[#64748B] font-medium flex items-center gap-1 mr-1">
                 <Eye className="w-3.5 h-3.5 text-[#1558A6]" /> Access:
               </span>
@@ -68,24 +70,26 @@ export const Navbar: React.FC = () => {
               </button>
             </div>
 
-            <span className="text-[#D8E0E8]">|</span>
+            <span className="hidden md:inline text-[#D8E0E8]">|</span>
 
-            <Link to="/about" className="hover:text-[#1558A6] transition-colors flex items-center gap-1 text-[11px]">
-              <HelpCircle className="w-3.5 h-3.5 text-[#2B6CB0]" /> Help & FAQ
+            <Link to="/about" className="hidden md:flex hover:text-[#1558A6] transition-colors items-center gap-1 text-[11px]">
+              <HelpCircle className="w-3.5 h-3.5 text-[#2B6CB0]" /> {t.nav.helpFaq}
             </Link>
 
-            <span className="text-[#D8E0E8]">|</span>
+            <span className="hidden md:inline text-[#D8E0E8]">|</span>
 
-            <div className="flex items-center gap-1 text-[11px]">
-              <Globe className="w-3.5 h-3.5 text-[#2B6CB0]" />
+            {/* Language Selector Dropdown */}
+            <div className="flex items-center gap-1.5 text-[11px] bg-white border border-[#D8E0E8] px-2 py-0.5 rounded-md shadow-2xs">
+              <Globe className="w-3.5 h-3.5 text-[#1558A6]" />
               <select
-                value={selectedLang}
-                onChange={(e) => setSelectedLang(e.target.value)}
-                className="bg-transparent text-[#1F2937] font-medium focus:outline-none cursor-pointer text-[11px]"
+                value={language}
+                onChange={(e) => setLanguage(e.target.value as Language)}
+                className="bg-transparent text-[#1F2937] font-semibold focus:outline-none cursor-pointer text-[11px]"
+                aria-label="Select Language"
               >
-                <option value="English">English</option>
-                <option value="Hindi">हिन्दी (Hindi)</option>
-                <option value="Marathi">मराठी (Marathi)</option>
+                <option value="en">English</option>
+                <option value="hi">हिंदी (Hindi)</option>
+                <option value="mr">मराठी (Marathi)</option>
               </select>
             </div>
 
@@ -107,14 +111,14 @@ export const Navbar: React.FC = () => {
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-black text-xl sm:text-2xl text-[#1558A6] tracking-tight leading-none group-hover:text-[#0F4482] transition-colors">
-                  MPLADS <span className="text-[#2B6CB0]">AI Monitor</span>
+                  {t.nav.platformTitle}
                 </span>
                 <span className="px-2 py-0.5 text-[10px] uppercase font-mono font-bold tracking-wider rounded bg-[#EAF3FB] text-[#1558A6] border border-[#BCD7F2]">
-                  OFFICIAL PORTAL
+                  {t.nav.officialPortal}
                 </span>
               </div>
               <p className="text-xs text-[#64748B] font-medium mt-1">
-                AI-Powered Infrastructure Monitoring & Accountability Platform
+                {t.nav.subtitle}
               </p>
             </div>
           </Link>
@@ -126,14 +130,14 @@ export const Navbar: React.FC = () => {
               className="px-4 py-2 rounded-md font-semibold text-xs bg-white text-[#1558A6] hover:bg-[#EAF3FB] transition-all border border-[#1558A6] flex items-center gap-1.5"
             >
               <PlusCircle className="w-3.5 h-3.5 text-[#1558A6]" />
-              <span>Report Issue</span>
+              <span>{t.nav.reportIssueBtn}</span>
             </Link>
             <Link
               to="/signin"
               className="px-4.5 py-2 rounded-md font-bold text-xs bg-[#1558A6] hover:bg-[#0F4482] text-white transition-all shadow-2xs flex items-center gap-1.5"
             >
               <UserCheck className="w-4 h-4" />
-              <span>SIGN IN</span>
+              <span>{t.nav.signIn}</span>
             </Link>
           </div>
 

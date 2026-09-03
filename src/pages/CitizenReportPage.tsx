@@ -9,8 +9,10 @@ import { EvidenceUploadStep } from '../components/complaint/EvidenceUploadStep';
 import { ComplaintSuccessModal } from '../components/complaint/ComplaintSuccessModal';
 import { ShieldCheck, ArrowRight, ArrowLeft, CheckCircle2, AlertTriangle, Search, Lock } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 
 export const CitizenReportPage: React.FC = () => {
+  const { t } = useLanguage();
   const [currentStep, setCurrentStep] = useState(1);
   const [submittedComplaint, setSubmittedComplaint] = useState<Complaint | null>(null);
 
@@ -36,13 +38,13 @@ export const CitizenReportPage: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Progress Steps (Prompt Specs)
+  // Dynamic Translated Steps
   const steps = [
-    { num: 1, title: 'Details' },
-    { num: 2, title: 'Location' },
-    { num: 3, title: 'Description' },
-    { num: 4, title: 'Evidence' },
-    { num: 5, title: 'Submit' }
+    { num: 1, title: t.reportForm.step1 },
+    { num: 2, title: t.reportForm.step2 },
+    { num: 3, title: t.reportForm.step3 },
+    { num: 4, title: t.reportForm.step4 },
+    { num: 5, title: t.reportForm.step5 }
   ];
 
   const handleLocationChange = (fields: Partial<{ state: string; district: string; locality: string; landmark: string; latitude: number; longitude: number }>) => {
@@ -65,35 +67,35 @@ export const CitizenReportPage: React.FC = () => {
 
     if (currentStep === 1) {
       if (!category) {
-        setErrorMsg('Please select an infrastructure issue category.');
+        setErrorMsg(t.reportForm.valCategoryReq);
         return false;
       }
     }
 
     if (currentStep === 2) {
       if (!state || !district || !locality.trim()) {
-        setErrorMsg('Please select State, District and enter Locality/Village name.');
+        setErrorMsg(t.reportForm.valTitleReq);
         return false;
       }
     }
 
     if (currentStep === 3) {
       if (!description.trim() || description.length < 15) {
-        setErrorMsg('Please provide a detailed description of the problem (at least 15 characters).');
+        setErrorMsg(t.reportForm.valDescReq);
         return false;
       }
     }
 
     if (currentStep === 4) {
       if (!isCitizenVerified || !citizenId) {
-        setErrorMsg('Please complete private citizen verification.');
+        setErrorMsg(t.reportForm.valMobileReq);
         return false;
       }
     }
 
     if (currentStep === 5) {
       if (evidence.length === 0) {
-        setErrorMsg('At least one photo or video evidence file is required.');
+        setErrorMsg(t.reportForm.valTitleReq);
         return false;
       }
     }
@@ -112,18 +114,20 @@ export const CitizenReportPage: React.FC = () => {
     setCurrentStep(prev => Math.max(prev - 1, 1));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateCurrentStep()) return;
 
     setIsSubmitting(true);
+    setErrorMsg(null);
 
     setTimeout(() => {
       setIsSubmitting(false);
 
+      const generatedId = generateComplaintId();
       const newComplaint: Complaint = {
-        complaintId: generateComplaintId(),
-        anonymousCitizenId: citizenId,
-        category: category!,
+        complaintId: generatedId,
+        anonymousCitizenId: citizenId || 'ANON-CITIZEN-99',
+        category: category || 'Public Facility',
         description,
         whenNoticed,
         isOngoing,
@@ -164,13 +168,13 @@ export const CitizenReportPage: React.FC = () => {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <span className="px-3 py-1 rounded text-[10px] uppercase font-bold bg-[#1558A6] text-white font-mono">
-                Official Application Form
+                {t.reportForm.pageBadge}
               </span>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-[#1558A6] tracking-tight mt-1.5">
-                Report an Infrastructure Issue
+                {t.reportForm.pageTitle}
               </h1>
               <p className="text-[#64748B] text-xs sm:text-sm mt-1">
-                Help us identify damaged, incomplete, delayed or improperly executed public infrastructure work.
+                {t.reportForm.pageSubtitle}
               </p>
             </div>
 
@@ -179,14 +183,14 @@ export const CitizenReportPage: React.FC = () => {
                 to="/report"
                 className="px-3.5 py-2 rounded-md text-xs font-bold bg-[#1558A6] text-white hover:bg-[#0F4482]"
               >
-                Report Issue
+                {t.nav.reportIssueBtn}
               </Link>
               <Link
                 to="/report/track"
                 className="px-3.5 py-2 rounded-md text-xs font-bold bg-white text-[#1558A6] border border-[#1558A6] hover:bg-[#EAF3FB] flex items-center gap-1.5"
               >
                 <Search className="w-3.5 h-3.5" />
-                <span>Track Complaint</span>
+                <span>{t.nav.trackComplaint}</span>
               </Link>
             </div>
           </div>
@@ -195,14 +199,14 @@ export const CitizenReportPage: React.FC = () => {
           <div className="p-3.5 bg-[#EAF3FB] border border-[#BCD7F2] rounded-md text-xs text-[#1558A6] flex items-center gap-3">
             <Lock className="w-4 h-4 text-[#1558A6] shrink-0" />
             <div>
-              <strong className="font-bold">🔒 Your identity is protected.</strong> Verified citizen reporting helps reduce fake and duplicate complaints while ensuring confidentiality.
+              <strong className="font-bold">{t.reportForm.privacyBadge}</strong>
             </div>
           </div>
         </div>
 
         {/* Step Progress Indicator */}
         <div className="bg-white rounded-lg p-4 border border-[#D8E0E8] shadow-xs">
-          <div className="flex items-center justify-between max-w-2xl mx-auto">
+          <div className="flex items-center justify-between max-w-2xl mx-auto flex-wrap gap-2">
             {steps.map((s, idx) => (
               <div key={s.num} className="flex items-center">
                 <div className="flex items-center gap-2">
@@ -218,11 +222,11 @@ export const CitizenReportPage: React.FC = () => {
                   <span className={`text-xs font-bold ${
                     currentStep === s.num ? 'text-[#1558A6]' : 'text-[#64748B]'
                   }`}>
-                    STEP {s.num}: {s.title}
+                    {s.title}
                   </span>
                 </div>
                 {idx < steps.length - 1 && (
-                  <span className="text-[#94A3B8] mx-2 text-xs font-mono">→</span>
+                  <span className="text-[#94A3B8] mx-2 text-xs font-mono hidden sm:inline">→</span>
                 )}
               </div>
             ))}
@@ -299,7 +303,7 @@ export const CitizenReportPage: React.FC = () => {
               className="px-4 py-2.5 rounded-md font-semibold text-xs bg-white text-[#1558A6] border border-[#D8E0E8] hover:bg-[#F6F8FA] flex items-center gap-1.5 disabled:opacity-40 cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Previous Step</span>
+              <span>{t.reportForm.btnBack}</span>
             </button>
 
             {currentStep < 5 ? (
@@ -308,7 +312,7 @@ export const CitizenReportPage: React.FC = () => {
                 onClick={handleNext}
                 className="px-5 py-2.5 rounded-md font-bold text-xs bg-[#1558A6] hover:bg-[#0F4482] text-white flex items-center gap-1.5 cursor-pointer shadow-2xs"
               >
-                <span>Continue to Step {currentStep + 1}</span>
+                <span>{t.reportForm.btnNext}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             ) : (
@@ -319,7 +323,7 @@ export const CitizenReportPage: React.FC = () => {
                 className="px-6 py-2.5 rounded-md font-bold text-xs bg-[#1558A6] hover:bg-[#0F4482] text-white flex items-center gap-2 shadow-xs cursor-pointer border border-[#1558A6]"
               >
                 <ShieldCheck className="w-4 h-4" />
-                <span>{isSubmitting ? 'Submitting Form...' : 'Submit Official Complaint'}</span>
+                <span>{isSubmitting ? t.reportForm.submitting : t.reportForm.btnSubmit}</span>
               </button>
             )}
           </div>

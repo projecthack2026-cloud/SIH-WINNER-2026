@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { LanguageProvider } from './context/LanguageContext';
 import type { StakeholderRole } from './types/auth';
 
 // Public Layout & Components
@@ -122,8 +123,9 @@ export const App: React.FC = () => {
   return (
     <AuthProvider>
       <Router>
-        <ScrollToTop />
-        <Routes>
+        <LanguageProvider>
+          <ScrollToTop />
+          <Routes>
           {/* Public Portal Routes */}
           <Route path="/" element={<PublicLayout><HomePage /></PublicLayout>} />
           <Route path="/about" element={<PublicLayout><AboutPage /></PublicLayout>} />
@@ -208,6 +210,7 @@ export const App: React.FC = () => {
           {/* Fallback */}
           <Route path="*" element={<PublicLayout><HomePage /></PublicLayout>} />
         </Routes>
+        </LanguageProvider>
       </Router>
     </AuthProvider>
   );

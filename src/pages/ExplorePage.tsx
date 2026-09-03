@@ -10,8 +10,11 @@ import {
   CheckCircle2, 
   ArrowRight 
 } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export const ExplorePage: React.FC = () => {
+  const { t } = useLanguage();
+
   const features = [
     {
       id: 'monitoring',
@@ -64,15 +67,15 @@ export const ExplorePage: React.FC = () => {
       <section className="bg-[#F6F8FA] border-b border-[#D8E0E8] py-12">
         <div className="container max-w-4xl space-y-3 text-center">
           <span className="px-3 py-1 rounded text-[10px] font-bold uppercase tracking-wider bg-[#EAF3FB] text-[#1558A6] border border-[#BCD7F2] font-mono">
-            Capability Overview
+            {t.explore.badge}
           </span>
 
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#1558A6] tracking-tight">
-            Explore MPLADS AI Monitor Capabilities
+            {t.explore.title}
           </h1>
 
           <p className="text-[#1F2937] text-xs sm:text-sm max-w-2xl mx-auto leading-relaxed">
-            Detailed breakdown of key modules, AI models, financial intelligence algorithms, and GIS tools.
+            {t.explore.subtitle}
           </p>
         </div>
       </section>
@@ -113,7 +116,7 @@ export const ExplorePage: React.FC = () => {
                     to="/report"
                     className="text-[#1558A6] font-bold hover:text-[#0F4482] inline-flex items-center gap-1 text-[11px]"
                   >
-                    <span>Test In Demo</span>
+                    <span>{t.explore.testInDemo}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
