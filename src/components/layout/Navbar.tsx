@@ -99,13 +99,11 @@ export const Navbar: React.FC = () => {
           
           {/* Logo & Official Emblem */}
           <Link to="/" className="flex items-center gap-3.5 shrink-0 group">
-            <div className="p-1.5 rounded-xl bg-white border border-[#D8E0E8] shadow-xs group-hover:border-[#BCD7F2] transition-colors">
-              <img 
-                src="/logo.png" 
-                alt="MPLADS AI Monitor Logo" 
-                className="w-12 h-12 sm:w-14 sm:h-14 object-contain shrink-0" 
-              />
-            </div>
+            <img 
+              src="/logo.png" 
+              alt="MPLADS AI Monitor Logo" 
+              className="w-12 h-12 sm:w-14 sm:h-14 object-contain shrink-0 drop-shadow-xs group-hover:scale-105 transition-transform" 
+            />
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-black text-xl sm:text-2xl text-[#1558A6] tracking-tight leading-none group-hover:text-[#0F4482] transition-colors">

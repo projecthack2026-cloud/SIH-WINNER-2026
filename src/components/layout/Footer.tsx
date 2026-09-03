@@ -16,7 +16,7 @@ export const Footer: React.FC = () => {
               <img 
                 src="/logo.png" 
                 alt="MPLADS AI Monitor Logo" 
-                className="w-9 h-9 object-contain shrink-0 bg-white p-0.5 rounded-md" 
+                className="w-10 h-10 object-contain shrink-0" 
               />
               <div>
                 <span className="font-extrabold text-lg text-white tracking-tight block">
