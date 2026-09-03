@@ -97,24 +97,26 @@ export const Navbar: React.FC = () => {
       <div className="bg-white py-3.5">
         <div className="container flex items-center justify-between gap-4">
           
-          {/* Logo & Emblem */}
-          <Link to="/" className="flex items-center gap-3 shrink-0">
-            <img 
-              src="/logo.png" 
-              alt="MPLADS AI Monitor Logo" 
-              className="w-11 h-11 sm:w-12 sm:h-12 object-contain shrink-0 drop-shadow-xs" 
-            />
+          {/* Logo & Official Emblem */}
+          <Link to="/" className="flex items-center gap-3.5 shrink-0 group">
+            <div className="p-1.5 rounded-xl bg-white border border-[#D8E0E8] shadow-xs group-hover:border-[#BCD7F2] transition-colors">
+              <img 
+                src="/logo.png" 
+                alt="MPLADS AI Monitor Logo" 
+                className="w-12 h-12 sm:w-14 sm:h-14 object-contain shrink-0" 
+              />
+            </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-extrabold text-xl sm:text-2xl text-[#1558A6] tracking-tight leading-none">
+                <span className="font-black text-xl sm:text-2xl text-[#1558A6] tracking-tight leading-none group-hover:text-[#0F4482] transition-colors">
                   MPLADS <span className="text-[#2B6CB0]">AI Monitor</span>
                 </span>
-                <span className="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded bg-[#EAF3FB] text-[#1558A6] border border-[#BCD7F2]">
-                  Portal
+                <span className="px-2 py-0.5 text-[10px] uppercase font-mono font-bold tracking-wider rounded bg-[#EAF3FB] text-[#1558A6] border border-[#BCD7F2]">
+                  OFFICIAL PORTAL
                 </span>
               </div>
               <p className="text-xs text-[#64748B] font-medium mt-1">
-                AI-Powered Infrastructure Monitoring & Accountability
+                AI-Powered Infrastructure Monitoring & Accountability Platform
               </p>
             </div>
           </Link>
