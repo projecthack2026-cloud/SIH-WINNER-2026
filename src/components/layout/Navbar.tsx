@@ -102,7 +102,7 @@ export const Navbar: React.FC = () => {
             <img 
               src="/logo.png" 
               alt="MPLADS AI Monitor Logo" 
-              className="w-10 h-10 object-contain shrink-0 drop-shadow-xs" 
+              className="w-11 h-11 sm:w-12 sm:h-12 object-contain shrink-0 drop-shadow-xs" 
             />
             <div>
               <div className="flex items-center gap-2">
