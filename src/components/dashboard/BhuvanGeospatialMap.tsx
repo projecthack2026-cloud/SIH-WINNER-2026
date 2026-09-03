@@ -498,21 +498,21 @@ export const BhuvanGeospatialMap: React.FC<Props> = ({
   };
 
   return (
-    <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden text-slate-900 space-y-0">
+    <div className="bg-white rounded-lg border border-[#D8E0E8] shadow-xs overflow-hidden text-[#1F2937] space-y-0">
       
-      {/* 1. Header Card Title & Status Indicator */}
-      <div className="bg-slate-900 px-6 py-4 border-b border-slate-800 text-white flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      {/* 1. Header Card Title & Controls Panel */}
+      <div className="bg-[#F6F8FA] px-6 py-4 border-b border-[#D8E0E8] text-[#1F2937] flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="bg-blue-600 text-white text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-md tracking-wider">
+            <span className="bg-[#1558A6] text-white text-[10px] uppercase font-bold px-2.5 py-0.5 rounded font-mono tracking-wider">
               GEOSPATIAL MONITORING
             </span>
-            <span className="text-xs text-slate-400 font-mono">Work Description NLP Location Pipeline</span>
+            <span className="text-xs text-[#64748B] font-mono">Work Description Location Pipeline</span>
           </div>
-          <h2 className="text-xl font-extrabold tracking-tight mt-1 text-white">
+          <h2 className="text-xl font-extrabold tracking-tight mt-1 text-[#1558A6]">
             MPLADS GEOSPATIAL MONITOR
           </h2>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-[#64748B]">
             Explore registered infrastructure works geographically.
           </p>
         </div>
@@ -521,16 +521,16 @@ export const BhuvanGeospatialMap: React.FC<Props> = ({
         <div className="flex flex-wrap items-center gap-2.5 text-xs w-full md:w-auto">
           
           {/* State Selector */}
-          <div className="flex items-center gap-1.5 bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700">
-            <span className="text-slate-400 font-medium">State:</span>
+          <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-md border border-[#D8E0E8]">
+            <span className="text-[#64748B] font-medium">State:</span>
             <select
               value={selectedState}
               onChange={handleStateChange}
-              className="bg-transparent text-white font-bold focus:outline-none cursor-pointer"
+              className="bg-transparent text-[#1F2937] font-bold focus:outline-none cursor-pointer"
             >
-              <option value="" className="bg-slate-900 text-white">All States</option>
+              <option value="" className="bg-white text-[#1F2937]">All States</option>
               {statesList.map((s) => (
-                <option key={s.state} value={s.state} className="bg-slate-900 text-white">
+                <option key={s.state} value={s.state} className="bg-white text-[#1F2937]">
                   {s.state} ({s.project_count})
                 </option>
               ))}
@@ -538,21 +538,21 @@ export const BhuvanGeospatialMap: React.FC<Props> = ({
           </div>
 
           {/* District Selector */}
-          <div className="flex items-center gap-1.5 bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700">
-            <span className="text-slate-400 font-medium">District:</span>
+          <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-md border border-[#D8E0E8]">
+            <span className="text-[#64748B] font-medium">District:</span>
             <select
               value={selectedDistrict}
               onChange={handleDistrictChange}
-              className="bg-transparent text-white font-bold focus:outline-none cursor-pointer"
+              className="bg-transparent text-[#1F2937] font-bold focus:outline-none cursor-pointer"
             >
               {districtsList.length > 0 ? (
                 districtsList.map((d) => (
-                  <option key={d.district} value={d.district} className="bg-slate-900 text-white">
+                  <option key={d.district} value={d.district} className="bg-white text-[#1F2937]">
                     {d.district} ({d.project_count})
                   </option>
                 ))
               ) : (
-                <option value={selectedDistrict} className="bg-slate-900 text-white">
+                <option value={selectedDistrict} className="bg-white text-[#1F2937]">
                   {selectedDistrict}
                 </option>
               )}
@@ -560,27 +560,27 @@ export const BhuvanGeospatialMap: React.FC<Props> = ({
           </div>
 
           {/* Location Quality Filter */}
-          <div className="flex items-center gap-1.5 bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700">
-            <SlidersHorizontal className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-            <span className="text-slate-400 font-medium">Quality:</span>
+          <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-md border border-[#D8E0E8]">
+            <SlidersHorizontal className="w-3.5 h-3.5 text-[#C47A00] shrink-0" />
+            <span className="text-[#64748B] font-medium">Quality:</span>
             <select
               value={locationQualityFilter}
               onChange={(e) => setLocationQualityFilter(e.target.value)}
-              className="bg-transparent text-white font-bold focus:outline-none cursor-pointer"
+              className="bg-transparent text-[#1F2937] font-bold focus:outline-none cursor-pointer"
             >
-              <option value="ALL" className="bg-slate-900 text-white">All Quality Layers</option>
-              <option value="VERIFIED" className="bg-slate-900 text-white">Verified / Exact</option>
-              <option value="VILLAGE_LEVEL" className="bg-slate-900 text-white">Village-level / Approx</option>
-              <option value="APPROXIMATE" className="bg-slate-900 text-white">Approximate Locality</option>
+              <option value="ALL" className="bg-white text-[#1F2937]">All Quality Layers</option>
+              <option value="VERIFIED" className="bg-white text-[#1F2937]">Verified / Exact</option>
+              <option value="VILLAGE_LEVEL" className="bg-white text-[#1F2937]">Village-level / Approx</option>
+              <option value="APPROXIMATE" className="bg-white text-[#1F2937]">Approximate Locality</option>
             </select>
           </div>
 
           {/* Map / Satellite Toggle */}
-          <div className="flex items-center bg-slate-800 rounded-xl p-0.5 border border-slate-700">
+          <div className="flex items-center bg-white rounded-md p-0.5 border border-[#D8E0E8]">
             <button
               onClick={() => setMapMode('map')}
-              className={`px-3 py-1 rounded-lg font-bold transition-colors ${
-                mapMode === 'map' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
+              className={`px-3 py-1 rounded-md font-bold text-xs transition-colors cursor-pointer ${
+                mapMode === 'map' ? 'bg-[#1558A6] text-white' : 'text-[#64748B] hover:text-[#1558A6]'
               }`}
             >
               Map
@@ -588,8 +588,8 @@ export const BhuvanGeospatialMap: React.FC<Props> = ({
             <button
               onClick={handleSatelliteClick}
               title={!bhuvanConfig?.satellite_configured ? 'Satellite layer not configured' : 'Switch to Satellite Layer'}
-              className={`px-3 py-1 rounded-lg font-bold transition-colors ${
-                mapMode === 'satellite' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
+              className={`px-3 py-1 rounded-md font-bold text-xs transition-colors cursor-pointer ${
+                mapMode === 'satellite' ? 'bg-[#1558A6] text-white' : 'text-[#64748B] hover:text-[#1558A6]'
               }`}
             >
               Satellite
@@ -600,7 +600,7 @@ export const BhuvanGeospatialMap: React.FC<Props> = ({
           <button
             onClick={handleFitDistrict}
             title="Fit to Selected District"
-            className="btn btn-sm bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700 text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-xl"
+            className="bg-white hover:bg-[#EAF3FB] text-[#1558A6] border border-[#1558A6] font-semibold text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-colors cursor-pointer"
           >
             <Maximize2 className="w-3.5 h-3.5" />
             <span>Fit District</span>
@@ -610,7 +610,7 @@ export const BhuvanGeospatialMap: React.FC<Props> = ({
           <button
             onClick={handleResetView}
             title="Reset Map View"
-            className="btn btn-sm bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700 text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-xl"
+            className="bg-white hover:bg-[#F6F8FA] text-[#64748B] border border-[#D8E0E8] font-semibold text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-colors cursor-pointer"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>Reset</span>

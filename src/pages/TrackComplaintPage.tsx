@@ -65,45 +65,45 @@ export const TrackComplaintPage: React.FC = () => {
   };
 
   return (
-    <main className="min-h-screen py-8 bg-[#F5F7F9]">
-      <div className="container max-w-4xl space-y-5">
+    <main className="min-h-screen py-10 bg-[#F6F8FA]">
+      <div className="container max-w-4xl space-y-6">
         
         {/* Page Header */}
-        <div className="bg-white rounded p-5 border border-[#D9E0E7] shadow-2xs space-y-1.5 text-center">
-          <span className="px-2.5 py-0.5 rounded text-[10px] uppercase font-bold bg-[#123B6D] text-white font-mono">
+        <div className="bg-white rounded-lg p-6 border border-[#D8E0E8] shadow-xs space-y-2 text-center">
+          <span className="px-3 py-1 rounded text-[10px] uppercase font-bold bg-[#1558A6] text-white font-mono">
             Public Inquiry System
           </span>
-          <h1 className="text-2xl font-extrabold text-[#123B6D] tracking-tight">
-            Track Your Complaint
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#1558A6] tracking-tight">
+            Track Infrastructure Grievance Status
           </h1>
-          <p className="text-[#64748B] text-xs max-w-xl mx-auto">
-            Enter your unique Complaint ID to view official status and resolution timeline.
+          <p className="text-[#64748B] text-xs sm:text-sm max-w-xl mx-auto">
+            Enter your unique Complaint ID to view official investigation status, assigned district authority, and resolution timeline.
           </p>
         </div>
 
         {/* Search Bar Input Panel */}
-        <div className="bg-white rounded p-5 border border-[#D9E0E7] shadow-2xs space-y-3">
+        <div className="bg-white rounded-lg p-6 border border-[#D8E0E8] shadow-xs space-y-4">
           <form
             onSubmit={(e) => {
               e.preventDefault();
               handleSearch();
             }}
-            className="flex flex-col sm:flex-row gap-2.5"
+            className="flex flex-col sm:flex-row gap-3"
           >
             <div className="relative flex-1">
-              <Search className="w-4 h-4 text-[#64748B] absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-[#64748B] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={complaintIdInput}
                 onChange={(e) => setComplaintIdInput(e.target.value)}
                 placeholder="Enter Complaint ID (e.g. MPL-CMP-2026-001284)"
-                className="form-input pl-9 text-xs font-mono uppercase"
+                className="form-input pl-10 text-xs font-mono uppercase"
               />
             </div>
 
             <button
               type="submit"
-              className="px-4 py-2.5 rounded font-bold text-xs bg-[#123B6D] hover:bg-[#0d2c52] text-white flex items-center justify-center gap-1.5 shrink-0"
+              className="px-5 py-2.5 rounded-md font-bold text-xs bg-[#1558A6] hover:bg-[#0F4482] text-white flex items-center justify-center gap-1.5 shrink-0 shadow-2xs border border-[#1558A6] cursor-pointer"
             >
               <Search className="w-3.5 h-3.5" />
               <span>Track Status</span>
@@ -111,7 +111,7 @@ export const TrackComplaintPage: React.FC = () => {
           </form>
 
           {/* Quick Demo Pre-fill */}
-          <div className="flex items-center gap-2 text-xs text-[#64748B] pt-2 border-t border-[#D9E0E7] flex-wrap font-mono">
+          <div className="flex items-center gap-2 text-xs text-[#64748B] pt-2 border-t border-[#D8E0E8] flex-wrap font-mono">
             <span>Sample IDs:</span>
             <button
               type="button"

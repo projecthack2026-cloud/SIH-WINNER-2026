@@ -33,33 +33,33 @@ export const RoleSelectionPage: React.FC = () => {
   };
 
   return (
-    <main className="min-h-screen py-10 bg-[#F5F7F9] flex items-center justify-center">
-      <div className="container max-w-2xl space-y-5">
+    <main className="min-h-screen py-12 bg-[#F6F8FA] flex items-center justify-center">
+      <div className="container max-w-2xl space-y-6">
         
-        {/* Main Card (White background, light grey border - Prompt Specs) */}
-        <div className="bg-white rounded p-6 border border-[#D9E0E7] shadow-2xs space-y-5">
+        {/* Main Card Container */}
+        <div className="bg-white rounded-lg p-6 sm:p-8 border border-[#D8E0E8] shadow-xs space-y-6">
           
-          {/* Header (Exact prompt specs) */}
-          <div className="text-center space-y-1.5 border-b border-[#D9E0E7] pb-4">
-            <div className="p-2.5 rounded bg-[#EAF3FB] text-[#123B6D] w-fit mx-auto border border-[#BCD7F2]">
-              <ShieldCheck className="w-6 h-6" />
+          {/* Header */}
+          <div className="text-center space-y-2 border-b border-[#D8E0E8] pb-5">
+            <div className="p-3 rounded-md bg-[#EAF3FB] text-[#1558A6] w-fit mx-auto border border-[#BCD7F2]">
+              <ShieldCheck className="w-7 h-7" />
             </div>
 
-            <span className="text-[10px] font-mono font-bold text-[#64748B] block uppercase tracking-wider">
-              MPLADS AI Monitor
+            <span className="text-[11px] font-mono font-bold text-[#64748B] block uppercase tracking-wider">
+              MPLADS AI Monitor • Official Portal
             </span>
 
-            <h1 className="text-xl font-extrabold text-[#123B6D]">
-              Secure Official Login
+            <h1 className="text-2xl font-extrabold text-[#1558A6]">
+              Secure Official Stakeholder Login
             </h1>
 
-            <p className="text-xs text-[#64748B]">
-              Select your role to continue.
+            <p className="text-xs text-[#64748B] max-w-md mx-auto">
+              Select your administrative or official role below to proceed to the secure credential login portal.
             </p>
           </div>
 
-          {/* Role Cards Grid (ALL CARDS USE SAME STYLING: White background, Grey border, Blue icon, Navy title. Selected: Navy border, Light Blue background - Prompt Specs) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Role Cards Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {ROLES.map((r) => {
               const Icon = getRoleIcon(r.id);
               const isSelected = selectedRole === r.id;
@@ -69,29 +69,29 @@ export const RoleSelectionPage: React.FC = () => {
                   key={r.id}
                   type="button"
                   onClick={() => setSelectedRole(r.id)}
-                  className={`p-4 rounded border text-left transition-all flex flex-col justify-between space-y-3 ${
+                  className={`p-4 rounded-md border text-left transition-all flex flex-col justify-between space-y-3 ${
                     isSelected
-                      ? 'bg-[#EAF3FB] border-[#123B6D] ring-1 ring-[#123B6D]'
-                      : 'bg-white border-[#D9E0E7] hover:border-[#1E5AA8]'
+                      ? 'bg-[#EAF3FB] border-[#1558A6] ring-1 ring-[#1558A6]'
+                      : 'bg-white border-[#D8E0E8] hover:border-[#2B6CB0]'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <div className={`p-2 rounded ${
-                      isSelected ? 'bg-[#123B6D] text-white' : 'bg-[#F5F7F9] text-[#1E5AA8] border border-[#D9E0E7]'
+                    <div className={`p-2 rounded-md ${
+                      isSelected ? 'bg-[#1558A6] text-white' : 'bg-[#F6F8FA] text-[#1558A6] border border-[#D8E0E8]'
                     }`}>
                       <Icon className="w-5 h-5" />
                     </div>
 
-                    <span className="text-[10px] font-mono font-bold text-[#64748B]">
-                      OFFICIAL PORTAL
+                    <span className="px-2 py-0.5 text-[10px] font-mono font-bold text-[#1558A6] bg-[#EAF3FB] border border-[#BCD7F2] rounded">
+                      Official Portal
                     </span>
                   </div>
 
                   <div>
-                    <h3 className="font-extrabold text-[#123B6D] text-sm">
+                    <h3 className="font-extrabold text-[#1F2937] text-sm">
                       {r.title}
                     </h3>
-                    <p className="text-[#64748B] text-xs mt-0.5 leading-normal">
+                    <p className="text-[#64748B] text-xs mt-1 leading-relaxed">
                       {r.description}
                     </p>
                   </div>
@@ -104,7 +104,7 @@ export const RoleSelectionPage: React.FC = () => {
           <div className="pt-2">
             <button
               onClick={handleProceed}
-              className="px-4 py-2.5 rounded font-bold text-xs bg-[#123B6D] hover:bg-[#0d2c52] text-white w-full flex items-center justify-center gap-2 shadow-2xs"
+              className="px-5 py-3 rounded-md font-bold text-xs bg-[#1558A6] hover:bg-[#0F4482] text-white w-full flex items-center justify-center gap-2 shadow-2xs border border-[#1558A6] transition-colors cursor-pointer"
             >
               <span>Continue to Login Form</span>
               <ArrowRight className="w-4 h-4" />
@@ -114,9 +114,9 @@ export const RoleSelectionPage: React.FC = () => {
         </div>
 
         {/* Security Notice Box */}
-        <div className="p-3 bg-white border border-[#D9E0E7] rounded text-center text-xs text-[#123B6D] font-mono flex items-center justify-center gap-2">
-          <Lock className="w-3.5 h-3.5 text-[#1E5AA8] shrink-0" />
-          <span>Security notice: This portal is intended for authorized users.</span>
+        <div className="p-3.5 bg-white border border-[#D8E0E8] rounded-md text-center text-xs text-[#1558A6] font-mono flex items-center justify-center gap-2 shadow-2xs">
+          <Lock className="w-4 h-4 text-[#1558A6] shrink-0" />
+          <span>Security Notice: Authorized official access log recorded & monitored.</span>
         </div>
 
       </div>

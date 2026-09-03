@@ -12,7 +12,7 @@ export const AppShell: React.FC<Props> = ({ children }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-slate-50 text-slate-900 overflow-hidden">
+    <div className="flex h-screen bg-[#F6F8FA] text-[#1F2937] overflow-hidden">
       
       {/* Persistent Role-Aware Sidebar */}
       <Sidebar

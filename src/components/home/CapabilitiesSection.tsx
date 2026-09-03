@@ -57,42 +57,42 @@ export const CapabilitiesSection: React.FC = () => {
   ];
 
   return (
-    <section className="py-10 bg-white border-b border-[#D9E0E7]">
+    <section className="py-12 bg-white border-b border-[#D8E0E8]">
       <div className="container space-y-6">
         
         {/* Section Header */}
-        <div className="text-center space-y-1.5 max-w-2xl mx-auto">
-          <span className="px-2.5 py-0.5 rounded text-[10px] font-extrabold uppercase font-mono tracking-wider bg-[#EAF3FB] text-[#123B6D] border border-[#BCD7F2]">
+        <div className="text-center space-y-2 max-w-2xl mx-auto">
+          <span className="px-3 py-1 rounded text-[10px] font-bold uppercase font-mono tracking-wider bg-[#EAF3FB] text-[#1558A6] border border-[#BCD7F2]">
             Platform Capabilities
           </span>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-[#123B6D] tracking-tight">
-            Platform Capabilities
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1558A6] tracking-tight">
+            Key Monitoring & Transparency Tools
           </h2>
           <p className="text-[#64748B] text-xs sm:text-sm font-normal">
-            Integrated AI and GIS oversight tools designed for administrative transparency and public service accountability.
+            Integrated AI and GIS oversight tools designed for administrative transparency, fraud prevention, and public service accountability.
           </p>
         </div>
 
-        {/* 6 Feature Cards Grid (ALL SAME STYLING - White background, 1px light grey border, Blue icon, Navy heading, Grey text) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* 6 Feature Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {capabilities.map((cap) => {
             const Icon = cap.icon;
             return (
               <div
                 key={cap.id}
-                className="bg-white rounded p-4 border border-[#D9E0E7] shadow-2xs hover:border-[#1E5AA8] transition-all flex flex-col justify-between space-y-3"
+                className="bg-white rounded-lg p-5 border border-[#D8E0E8] shadow-xs hover:border-[#1558A6] transition-all flex flex-col justify-between space-y-4"
               >
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <div className="p-2 rounded bg-[#EAF3FB] text-[#1E5AA8] border border-[#BCD7F2]">
+                    <div className="p-2.5 rounded-md bg-[#EAF3FB] text-[#1558A6] border border-[#BCD7F2]">
                       <Icon className="w-5 h-5" />
                     </div>
-                    <span className="text-[10px] font-mono font-bold text-[#64748B]">
+                    <span className="text-[10px] font-mono font-bold text-[#64748B] uppercase tracking-wider">
                       MODULE
                     </span>
                   </div>
 
-                  <h3 className="text-sm font-extrabold text-[#123B6D]">
+                  <h3 className="text-base font-bold text-[#1F2937]">
                     {cap.title}
                   </h3>
 
@@ -101,12 +101,12 @@ export const CapabilitiesSection: React.FC = () => {
                   </p>
                 </div>
 
-                <div className="pt-2 border-t border-[#D9E0E7]">
+                <div className="pt-3 border-t border-[#D8E0E8]">
                   <Link
                     to={cap.link}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-[#1E5AA8] hover:underline"
+                    className="inline-flex items-center gap-1 text-xs font-bold text-[#1558A6] hover:text-[#0F4482]"
                   >
-                    <span>Learn More</span>
+                    <span>Explore Module Details</span>
                     <ChevronRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>

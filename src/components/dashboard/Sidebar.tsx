@@ -121,20 +121,20 @@ export const Sidebar: React.FC<Props> = ({
   const navItems = getNavItems();
 
   const sidebarContent = (
-    <div className="flex flex-col h-full bg-[#0D274A] text-[#EAF3FB] border-r border-[#194C8A]">
+    <div className="flex flex-col h-full bg-white text-[#1F2937] border-r border-[#D8E0E8] shadow-2xs">
       
       {/* Brand Header */}
-      <div className="p-3.5 border-b border-[#194C8A] flex items-center justify-between">
+      <div className="p-3.5 border-b border-[#D8E0E8] flex items-center justify-between bg-[#F6F8FA]">
         <Link to="/" className="flex items-center gap-2.5 overflow-hidden">
-          <div className="p-1.5 rounded bg-white text-[#123B6D] shrink-0">
+          <div className="p-1.5 rounded-md bg-[#EAF3FB] text-[#1558A6] border border-[#BCD7F2] shrink-0">
             <Shield className="w-5 h-5" />
           </div>
           {!collapsed && (
             <div className="truncate">
-              <span className="font-extrabold text-sm text-white tracking-tight leading-none block">
-                MPLADS <span className="text-[#EAF3FB]">AI</span>
+              <span className="font-extrabold text-sm text-[#1558A6] tracking-tight leading-none block">
+                MPLADS <span className="text-[#2B6CB0]">AI</span>
               </span>
-              <span className="text-[10px] text-[#EAF3FB] uppercase font-mono tracking-wider">
+              <span className="text-[10px] text-[#64748B] uppercase font-mono font-bold tracking-wider">
                 {role} Command Desk
               </span>
             </div>
@@ -143,7 +143,7 @@ export const Sidebar: React.FC<Props> = ({
 
         <button
           onClick={onToggleCollapse}
-          className="hidden lg:flex p-1 rounded text-[#EAF3FB] hover:bg-[#123B6D] transition-colors"
+          className="hidden lg:flex p-1.5 rounded-md text-[#64748B] hover:text-[#1558A6] hover:bg-[#EAF3FB] transition-colors border border-transparent hover:border-[#BCD7F2]"
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
@@ -161,13 +161,13 @@ export const Sidebar: React.FC<Props> = ({
               to={item.path}
               onClick={onCloseMobile}
               title={collapsed ? item.label : undefined}
-              className={`flex items-center gap-2.5 px-3 py-2 rounded text-xs font-semibold transition-all ${
+              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-md text-xs font-semibold transition-all ${
                 active
-                  ? 'bg-[#123B6D] text-white font-bold border-l-4 border-[#1E5AA8]'
-                  : 'text-[#EAF3FB] hover:bg-[#123B6D]/60'
+                  ? 'bg-[#EAF3FB] text-[#1558A6] font-bold border-l-4 border-[#1558A6] shadow-2xs'
+                  : 'text-[#475569] hover:bg-[#F6F8FA] hover:text-[#1558A6]'
               }`}
             >
-              <Icon className="w-4 h-4 shrink-0" />
+              <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-[#1558A6]' : 'text-[#64748B]'}`} />
               {!collapsed && <span className="truncate">{item.label}</span>}
             </Link>
           );
@@ -175,12 +175,12 @@ export const Sidebar: React.FC<Props> = ({
       </div>
 
       {/* Footer Link to Public Website */}
-      <div className="p-3 border-t border-[#194C8A]">
+      <div className="p-3 border-t border-[#D8E0E8] bg-[#F6F8FA]">
         <Link
           to="/"
-          className="flex items-center gap-2 text-xs font-semibold text-[#EAF3FB] hover:text-white px-2 py-1.5 rounded hover:bg-[#123B6D] transition-colors"
+          className="flex items-center gap-2 text-xs font-semibold text-[#1558A6] hover:bg-[#EAF3FB] px-2.5 py-2 rounded-md transition-colors border border-[#BCD7F2]"
         >
-          <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+          <ExternalLink className="w-3.5 h-3.5 shrink-0 text-[#1558A6]" />
           {!collapsed && <span>Public Portal Home</span>}
         </Link>
       </div>

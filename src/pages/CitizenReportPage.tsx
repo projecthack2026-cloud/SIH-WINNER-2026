@@ -156,34 +156,34 @@ export const CitizenReportPage: React.FC = () => {
   };
 
   return (
-    <main className="min-h-screen py-8 bg-[#F5F7F9]">
-      <div className="container max-w-4xl space-y-5">
+    <main className="min-h-screen py-10 bg-[#F6F8FA]">
+      <div className="container max-w-4xl space-y-6">
         
-        {/* Page Header (White background, thin grey border - Prompt Specs) */}
-        <div className="bg-white rounded p-5 border border-[#D9E0E7] space-y-3 shadow-2xs">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        {/* Page Header */}
+        <div className="bg-white rounded-lg p-6 border border-[#D8E0E8] space-y-4 shadow-xs">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <span className="px-2.5 py-0.5 rounded text-[10px] uppercase font-bold bg-[#123B6D] text-white font-mono">
+              <span className="px-3 py-1 rounded text-[10px] uppercase font-bold bg-[#1558A6] text-white font-mono">
                 Official Application Form
               </span>
-              <h1 className="text-2xl font-extrabold text-[#123B6D] tracking-tight mt-1">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#1558A6] tracking-tight mt-1.5">
                 Report an Infrastructure Issue
               </h1>
-              <p className="text-[#64748B] text-xs mt-0.5">
+              <p className="text-[#64748B] text-xs sm:text-sm mt-1">
                 Help us identify damaged, incomplete, delayed or improperly executed public infrastructure work.
               </p>
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-2.5 shrink-0">
               <Link
                 to="/report"
-                className="px-3 py-1.5 rounded text-xs font-bold bg-[#123B6D] text-white hover:bg-[#0d2c52]"
+                className="px-3.5 py-2 rounded-md text-xs font-bold bg-[#1558A6] text-white hover:bg-[#0F4482]"
               >
                 Report Issue
               </Link>
               <Link
                 to="/report/track"
-                className="px-3 py-1.5 rounded text-xs font-bold bg-white text-[#123B6D] border border-[#123B6D] hover:bg-[#EAF3FB] flex items-center gap-1.5"
+                className="px-3.5 py-2 rounded-md text-xs font-bold bg-white text-[#1558A6] border border-[#1558A6] hover:bg-[#EAF3FB] flex items-center gap-1.5"
               >
                 <Search className="w-3.5 h-3.5" />
                 <span>Track Complaint</span>
@@ -192,33 +192,33 @@ export const CitizenReportPage: React.FC = () => {
           </div>
 
           {/* Privacy Information Box */}
-          <div className="p-3 bg-[#EAF3FB] border border-[#BCD7F2] rounded text-xs text-[#123B6D] flex items-center gap-2.5">
-            <Lock className="w-4 h-4 text-[#1E5AA8] shrink-0" />
+          <div className="p-3.5 bg-[#EAF3FB] border border-[#BCD7F2] rounded-md text-xs text-[#1558A6] flex items-center gap-3">
+            <Lock className="w-4 h-4 text-[#1558A6] shrink-0" />
             <div>
-              <strong className="font-bold">Your identity is protected.</strong> Verified citizen reporting helps reduce fake and duplicate complaints while ensuring confidentiality.
+              <strong className="font-bold">🔒 Your identity is protected.</strong> Verified citizen reporting helps reduce fake and duplicate complaints while ensuring confidentiality.
             </div>
           </div>
         </div>
 
-        {/* Step Progress Indicator (1 Details → 2 Location → 3 Description → 4 Evidence → 5 Submit - Prompt Specs) */}
-        <div className="bg-white rounded p-3 border border-[#D9E0E7] shadow-2xs">
+        {/* Step Progress Indicator */}
+        <div className="bg-white rounded-lg p-4 border border-[#D8E0E8] shadow-xs">
           <div className="flex items-center justify-between max-w-2xl mx-auto">
             {steps.map((s, idx) => (
               <div key={s.num} className="flex items-center">
-                <div className="flex items-center gap-1.5">
-                  <div className={`w-6 h-6 rounded flex items-center justify-center font-bold text-xs font-mono transition-colors ${
+                <div className="flex items-center gap-2">
+                  <div className={`w-7 h-7 rounded-md flex items-center justify-center font-bold text-xs font-mono transition-colors ${
                     currentStep === s.num
-                      ? 'bg-[#123B6D] text-white'
+                      ? 'bg-[#1558A6] text-white shadow-2xs'
                       : currentStep > s.num
-                      ? 'bg-[#1E5AA8] text-white'
-                      : 'bg-[#F5F7F9] text-[#64748B] border border-[#D9E0E7]'
+                      ? 'bg-[#2B6CB0] text-white'
+                      : 'bg-[#F6F8FA] text-[#64748B] border border-[#D8E0E8]'
                   }`}>
-                    {currentStep > s.num ? <CheckCircle2 className="w-3.5 h-3.5" /> : s.num}
+                    {currentStep > s.num ? <CheckCircle2 className="w-4 h-4" /> : s.num}
                   </div>
                   <span className={`text-xs font-bold ${
-                    currentStep === s.num ? 'text-[#123B6D]' : 'text-[#64748B]'
+                    currentStep === s.num ? 'text-[#1558A6]' : 'text-[#64748B]'
                   }`}>
-                    {s.title}
+                    STEP {s.num}: {s.title}
                   </span>
                 </div>
                 {idx < steps.length - 1 && (
@@ -229,16 +229,16 @@ export const CitizenReportPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Validation Error Alert (Red ONLY for genuine error - Prompt Specs) */}
+        {/* Validation Error Alert */}
         {errorMsg && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded text-red-800 text-xs font-semibold flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
+          <div className="p-3.5 bg-[#FEF2F2] border border-[#FECACA] rounded-md text-[#C0392B] text-xs font-semibold flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-[#C0392B] shrink-0" />
             <span>{errorMsg}</span>
           </div>
         )}
 
         {/* Form Body Container */}
-        <div className="bg-white rounded p-5 border border-[#D9E0E7] shadow-2xs space-y-5">
+        <div className="bg-white rounded-lg p-6 border border-[#D8E0E8] shadow-xs space-y-6">
           
           {currentStep === 1 && (
             <IssueTypeStep
@@ -290,13 +290,13 @@ export const CitizenReportPage: React.FC = () => {
             />
           )}
 
-          {/* Buttons: Dark Navy Blue Primary, White/Navy Secondary (Prompt Specs) */}
-          <div className="pt-4 border-t border-[#D9E0E7] flex items-center justify-between">
+          {/* Form Action Buttons */}
+          <div className="pt-4 border-t border-[#D8E0E8] flex items-center justify-between">
             <button
               type="button"
               onClick={handleBack}
               disabled={currentStep === 1 || isSubmitting}
-              className="px-3.5 py-1.5 rounded font-semibold text-xs bg-white text-[#123B6D] border border-[#D9E0E7] hover:bg-[#F5F7F9] flex items-center gap-1 disabled:opacity-40"
+              className="px-4 py-2.5 rounded-md font-semibold text-xs bg-white text-[#1558A6] border border-[#D8E0E8] hover:bg-[#F6F8FA] flex items-center gap-1.5 disabled:opacity-40 cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Previous Step</span>
@@ -306,7 +306,7 @@ export const CitizenReportPage: React.FC = () => {
               <button
                 type="button"
                 onClick={handleNext}
-                className="px-4 py-2 rounded font-bold text-xs bg-[#123B6D] hover:bg-[#0d2c52] text-white flex items-center gap-1.5"
+                className="px-5 py-2.5 rounded-md font-bold text-xs bg-[#1558A6] hover:bg-[#0F4482] text-white flex items-center gap-1.5 cursor-pointer shadow-2xs"
               >
                 <span>Continue to Step {currentStep + 1}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -316,7 +316,7 @@ export const CitizenReportPage: React.FC = () => {
                 type="button"
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className="px-5 py-2 rounded font-bold text-xs bg-[#123B6D] hover:bg-[#0d2c52] text-white flex items-center gap-1.5 shadow-2xs"
+                className="px-6 py-2.5 rounded-md font-bold text-xs bg-[#1558A6] hover:bg-[#0F4482] text-white flex items-center gap-2 shadow-xs cursor-pointer border border-[#1558A6]"
               >
                 <ShieldCheck className="w-4 h-4" />
                 <span>{isSubmitting ? 'Submitting Form...' : 'Submit Official Complaint'}</span>

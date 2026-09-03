@@ -61,13 +61,13 @@ export const ExplorePage: React.FC = () => {
     <main className="min-h-screen bg-white">
       
       {/* 1. Header Hero */}
-      <section className="bg-white border-b border-[#D9E0E7] py-10">
+      <section className="bg-[#F6F8FA] border-b border-[#D8E0E8] py-12">
         <div className="container max-w-4xl space-y-3 text-center">
-          <span className="px-2.5 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider bg-[#EAF3FB] text-[#123B6D] border border-[#BCD7F2] font-mono">
+          <span className="px-3 py-1 rounded text-[10px] font-bold uppercase tracking-wider bg-[#EAF3FB] text-[#1558A6] border border-[#BCD7F2] font-mono">
             Capability Overview
           </span>
 
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#123B6D] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#1558A6] tracking-tight">
             Explore MPLADS AI Monitor Capabilities
           </h1>
 
@@ -77,44 +77,44 @@ export const ExplorePage: React.FC = () => {
         </div>
       </section>
 
-      {/* 2. Capability Cards List (Uniform White cards, grey border, blue icon, navy headings) */}
-      <section className="py-10 bg-[#F5F7F9] border-b border-[#D9E0E7]">
-        <div className="container max-w-5xl space-y-4">
+      {/* 2. Capability Cards List */}
+      <section className="py-12 bg-[#F6F8FA] border-b border-[#D8E0E8]">
+        <div className="container max-w-5xl space-y-5">
           {features.map((feat) => {
             const Icon = feat.icon;
             return (
               <div
                 key={feat.id}
                 id={feat.id}
-                className="bg-white p-5 rounded border border-[#D9E0E7] shadow-2xs space-y-3"
+                className="bg-white p-6 rounded-lg border border-[#D8E0E8] shadow-xs space-y-4"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 rounded bg-[#EAF3FB] text-[#1E5AA8] border border-[#BCD7F2]">
-                      <Icon className="w-5 h-5" />
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-3.5">
+                    <div className="p-2.5 rounded-md bg-[#EAF3FB] text-[#1558A6] border border-[#BCD7F2]">
+                      <Icon className="w-6 h-6" />
                     </div>
                     <div>
-                      <h2 className="text-base font-extrabold text-[#123B6D]">{feat.title}</h2>
-                      <p className="text-xs text-[#64748B] mt-0.5 max-w-3xl">{feat.desc}</p>
+                      <h2 className="text-base sm:text-lg font-bold text-[#1F2937]">{feat.title}</h2>
+                      <p className="text-xs text-[#64748B] mt-1 max-w-3xl leading-relaxed">{feat.desc}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-[#D9E0E7] flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+                <div className="pt-3 border-t border-[#D8E0E8] flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
                   <div className="flex flex-wrap items-center gap-2">
                     {feat.highlights.map((h, i) => (
-                      <span key={i} className="px-2 py-0.5 rounded bg-[#F5F7F9] text-[#123B6D] border border-[#D9E0E7] flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3 text-[#1E5AA8]" /> {h}
+                      <span key={i} className="px-2.5 py-1 rounded-md bg-[#F6F8FA] text-[#1558A6] border border-[#D8E0E8] flex items-center gap-1.5 font-semibold text-[11px]">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[#16805C]" /> {h}
                       </span>
                     ))}
                   </div>
 
                   <Link
                     to="/report"
-                    className="text-[#1E5AA8] font-bold hover:underline inline-flex items-center gap-1 text-[11px]"
+                    className="text-[#1558A6] font-bold hover:text-[#0F4482] inline-flex items-center gap-1 text-[11px]"
                   >
                     <span>Test In Demo</span>
-                    <ArrowRight className="w-3 h-3" />
+                    <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
               </div>
