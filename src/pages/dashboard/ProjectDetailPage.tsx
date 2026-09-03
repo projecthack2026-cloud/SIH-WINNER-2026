@@ -5,8 +5,10 @@ import { RiskBreakdownCard } from '../../components/dashboard/RiskBreakdownCard'
 import { ArrowLeft, RefreshCw, AlertCircle } from 'lucide-react';
 import { api, mapApiProjectToMockProject } from '../../services/api';
 import type { MockProject } from '../../types/complaint';
+import { useLanguage } from '../../context/LanguageContext';
 
 export const ProjectDetailPage: React.FC = () => {
+  const { t, tStatus } = useLanguage();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
@@ -25,20 +27,20 @@ export const ProjectDetailPage: React.FC = () => {
           if (matched && matched.length > 0) {
             setProject(mapApiProjectToMockProject(matched[0]));
           } else {
-            setError("Project not found in database.");
+            setError(t.projectDetail.errorText);
           }
         } else {
           const res = await api.getProjectById(numericId);
           setProject(mapApiProjectToMockProject(res));
         }
       } catch (err: any) {
-        setError("Unable to load project details from database.");
+        setError(t.projectDetail.errorText);
       } finally {
         setLoading(false);
       }
     };
     fetchProject();
-  }, [id]);
+  }, [id, t.projectDetail.errorText]);
 
   return (
     <AppShell>
@@ -48,13 +50,13 @@ export const ProjectDetailPage: React.FC = () => {
           className="btn btn-outline btn-sm text-xs flex items-center gap-1.5"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Back to Dashboard</span>
+          <span>{t.projectDetail.backToDash}</span>
         </button>
 
         {loading && (
           <div className="p-6 bg-white rounded-2xl border border-slate-200 text-center text-xs flex items-center justify-center gap-2">
             <RefreshCw className="w-4 h-4 animate-spin text-blue-600" />
-            <span>Loading project details from PostgreSQL database...</span>
+            <span>{t.projectDetail.loadingText}</span>
           </div>
         )}
 
@@ -71,8 +73,8 @@ export const ProjectDetailPage: React.FC = () => {
           <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xl space-y-6">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <span className="badge badge-info font-mono text-xs font-bold">Canonical ID: {project.id}</span>
-                <span className="badge badge-success text-xs font-bold">{project.status}</span>
+                <span className="badge badge-info font-mono text-xs font-bold">{t.projectDetail.canonicalIdLabel} {project.id}</span>
+                <span className="badge badge-success text-xs font-bold">{tStatus(project.status)}</span>
               </div>
 
               <h1 className="text-2xl font-extrabold text-slate-900 leading-tight">
@@ -85,27 +87,27 @@ export const ProjectDetailPage: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                <span className="text-slate-500 font-semibold block">MP & Constituency</span>
+                <span className="text-slate-500 font-semibold block">{t.projectDetail.mpConstituencyLabel}</span>
                 <p className="font-bold text-slate-900 text-sm mt-0.5">{project.mpName} ({project.constituency})</p>
               </div>
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                <span className="text-slate-500 font-semibold block">Sanctioned Amount</span>
+                <span className="text-slate-500 font-semibold block">{t.projectDetail.sanctionedAmtLabel}</span>
                 <p className="font-bold text-slate-900 text-sm mt-0.5">{project.sanctionedAmount}</p>
               </div>
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                <span className="text-slate-500 font-semibold block">Financial Utilization</span>
+                <span className="text-slate-500 font-semibold block">{t.projectDetail.finUtilLabel}</span>
                 <p className="font-bold text-blue-700 text-sm mt-0.5">{project.financialUtilization}%</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-1">
-                <span className="text-slate-500 font-semibold block">Physical Progress Status</span>
-                <p className="font-bold text-slate-700 text-xs">Physical progress data unavailable</p>
+                <span className="text-slate-500 font-semibold block">{t.projectDetail.physicalStatusLabel}</span>
+                <p className="font-bold text-slate-700 text-xs">{t.projectDetail.physicalDataUnavailable}</p>
               </div>
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-1">
-                <span className="text-slate-500 font-semibold block">Geospatial Coordinates</span>
-                <p className="font-bold text-slate-700 text-xs">Location coordinates unavailable</p>
+                <span className="text-slate-500 font-semibold block">{t.projectDetail.geoCoordsLabel}</span>
+                <p className="font-bold text-slate-700 text-xs">{t.projectDetail.geoDataUnavailable}</p>
               </div>
             </div>
 

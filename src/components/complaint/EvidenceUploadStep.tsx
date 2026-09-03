@@ -3,6 +3,7 @@ import type { EvidenceFile, EvidenceVerificationStatus } from '../../types/compl
 import { simulateAiEvidenceCheck } from '../../data/mockData';
 import { AiEvidenceStatusCard } from './AiEvidenceStatusCard';
 import { UploadCloud, Image as ImageIcon, Trash2, Sparkles, AlertTriangle } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface Props {
   evidence: EvidenceFile[];
@@ -15,6 +16,7 @@ export const EvidenceUploadStep: React.FC<Props> = ({
   evidenceVerificationStatus,
   onChange
 }) => {
+  const { t } = useLanguage();
   const [analyzing, setAnalyzing] = useState(false);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -80,16 +82,16 @@ export const EvidenceUploadStep: React.FC<Props> = ({
   return (
     <div className="space-y-4">
       <div className="border-b border-[#D9E0E7] pb-3">
-        <span className="text-[10px] font-mono font-bold text-[#64748B] uppercase">STEP 5 OF 5</span>
-        <h2 className="text-base font-bold text-[#123B6D]">UPLOAD SUPPORTING EVIDENCE</h2>
+        <span className="text-[10px] font-mono font-bold text-[#64748B] uppercase">{t.reportForm.step5}</span>
+        <h2 className="text-base font-bold text-[#123B6D]">{t.reportForm.step5Heading}</h2>
         <p className="text-[#1F2937] text-xs mt-0.5">
-          Upload a clear photograph of the reported issue. Accepted formats: JPG / PNG up to 15MB.
+          {t.reportForm.step5Subtitle}
         </p>
       </div>
 
       <div className="space-y-4">
         
-        {/* Upload Box (White background, dashed light-grey border, blue upload icon, dark grey instructions - Prompt Specs) */}
+        {/* Upload Box */}
         <div className="border-2 border-dashed border-[#D9E0E7] rounded p-6 bg-white text-center space-y-3 hover:border-[#1E5AA8] transition-colors relative">
           
           <input
@@ -105,10 +107,10 @@ export const EvidenceUploadStep: React.FC<Props> = ({
 
           <div className="space-y-1">
             <p className="text-xs font-bold text-[#1F2937]">
-              Click or drag files here to upload evidence
+              {t.reportForm.uploadPhoto}
             </p>
             <p className="text-[11px] text-[#64748B] font-mono">
-              Accepted formats: JPG / PNG / WEBP up to 15MB
+              {t.reportForm.uploadFormats}
             </p>
           </div>
 
@@ -120,7 +122,7 @@ export const EvidenceUploadStep: React.FC<Props> = ({
               className="px-3 py-1.5 rounded font-semibold text-xs bg-[#F5F7F9] hover:bg-[#EAF3FB] text-[#123B6D] border border-[#D9E0E7] inline-flex items-center gap-1.5 z-10 relative"
             >
               <Sparkles className="w-3.5 h-3.5 text-[#1E5AA8]" />
-              <span>{analyzing ? 'Inspecting File...' : 'Attach Sample Photo (Quick Demo)'}</span>
+              <span>{analyzing ? t.reportForm.inspectingFile : t.reportForm.attachSample}</span>
             </button>
           </div>
 
@@ -130,7 +132,7 @@ export const EvidenceUploadStep: React.FC<Props> = ({
         {analyzing && (
           <div className="p-3 bg-[#EAF3FB] border border-[#BCD7F2] rounded flex items-center justify-center gap-2 text-[#123B6D] text-xs font-semibold">
             <Sparkles className="w-4 h-4 text-[#1E5AA8] animate-spin" />
-            <span>Verification Status: <strong>Under Verification</strong> — Running metadata inspection...</span>
+            <span>{t.reportForm.inspectingFile}</span>
           </div>
         )}
 
@@ -139,7 +141,7 @@ export const EvidenceUploadStep: React.FC<Props> = ({
           <div className="space-y-3">
             <h3 className="font-bold text-[#123B6D] text-xs uppercase tracking-wider flex items-center gap-1.5 font-mono">
               <ImageIcon className="w-4 h-4 text-[#1E5AA8]" />
-              <span>Attached Evidence ({evidence.length})</span>
+              <span>{t.reportForm.attachedEvidence} ({evidence.length})</span>
             </h3>
 
             <div className="grid grid-cols-1 gap-3">
@@ -157,7 +159,7 @@ export const EvidenceUploadStep: React.FC<Props> = ({
                         <p className="text-xs font-bold text-[#123B6D] truncate max-w-xs">{item.name}</p>
                         <p className="text-[10px] text-[#64748B] font-mono">{(item.size / (1024 * 1024)).toFixed(2)} MB</p>
                         <span className="inline-block mt-0.5 px-2 py-0.5 rounded text-[10px] font-bold bg-[#EAF3FB] text-[#123B6D] border border-[#BCD7F2]">
-                          Verification Status: Under Verification
+                          {t.reportForm.photoVerified}
                         </span>
                       </div>
                     </div>
@@ -189,7 +191,7 @@ export const EvidenceUploadStep: React.FC<Props> = ({
         {evidence.length === 0 && !analyzing && (
           <div className="p-2.5 bg-[#F5F7F9] border border-[#D9E0E7] rounded text-xs text-[#64748B] flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-[#123B6D] shrink-0" />
-            <span>At least 1 supporting photo or video evidence file is required.</span>
+            <span>{t.reportForm.reqEvidenceAlert}</span>
           </div>
         )}
 

@@ -11,8 +11,10 @@ import {
   Lock, 
   Activity
 } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export const RoleSelectionPage: React.FC = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [selectedRole, setSelectedRole] = useState<StakeholderRole>('mp');
 
@@ -46,15 +48,15 @@ export const RoleSelectionPage: React.FC = () => {
             />
 
             <span className="text-[11px] font-mono font-bold text-[#64748B] block uppercase tracking-wider">
-              MPLADS AI Monitor • Official Portal
+              {t.roleSelection.portalHeader}
             </span>
 
             <h1 className="text-2xl font-extrabold text-[#1558A6]">
-              Secure Official Stakeholder Login
+              {t.roleSelection.pageTitle}
             </h1>
 
             <p className="text-xs text-[#64748B] max-w-md mx-auto">
-              Select your administrative or official role below to proceed to the secure credential login portal.
+              {t.roleSelection.pageSubtitle}
             </p>
           </div>
 
@@ -106,7 +108,7 @@ export const RoleSelectionPage: React.FC = () => {
               onClick={handleProceed}
               className="px-5 py-3 rounded-md font-bold text-xs bg-[#1558A6] hover:bg-[#0F4482] text-white w-full flex items-center justify-center gap-2 shadow-2xs border border-[#1558A6] transition-colors cursor-pointer"
             >
-              <span>Continue to Login Form</span>
+              <span>{t.roleSelection.continueBtn}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -116,7 +118,7 @@ export const RoleSelectionPage: React.FC = () => {
         {/* Security Notice Box */}
         <div className="p-3.5 bg-white border border-[#D8E0E8] rounded-md text-center text-xs text-[#1558A6] font-mono flex items-center justify-center gap-2 shadow-2xs">
           <Lock className="w-4 h-4 text-[#1558A6] shrink-0" />
-          <span>Security Notice: Authorized official access log recorded & monitored.</span>
+          <span>{t.roleSelection.securityNotice}</span>
         </div>
 
       </div>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface Props {
   description: string;
@@ -13,13 +14,21 @@ export const DescriptionStep: React.FC<Props> = ({
   isOngoing,
   onChange
 }) => {
+  const { t } = useLanguage();
+
+  const getOngoingLabel = (opt: 'Yes' | 'No' | 'Not Sure') => {
+    if (opt === 'Yes') return t.reportForm.optYes;
+    if (opt === 'No') return t.reportForm.optNo;
+    return t.reportForm.optNotSure;
+  };
+
   return (
     <div className="space-y-4">
       <div className="border-b border-[#D9E0E7] pb-3">
-        <span className="text-[10px] font-mono font-bold text-[#64748B] uppercase">STEP 3 OF 5</span>
-        <h2 className="text-base font-bold text-[#123B6D]">Issue Description & Timeline</h2>
+        <span className="text-[10px] font-mono font-bold text-[#64748B] uppercase">{t.reportForm.step3}</span>
+        <h2 className="text-base font-bold text-[#123B6D]">{t.reportForm.step3Heading}</h2>
         <p className="text-[#64748B] text-xs mt-0.5">
-          Provide detailed information regarding the defect, delay, or improper execution observed.
+          {t.reportForm.step3Subtitle}
         </p>
       </div>
 
@@ -27,23 +36,23 @@ export const DescriptionStep: React.FC<Props> = ({
         
         {/* Description Text Area */}
         <div className="form-group">
-          <label className="form-label text-xs">Problem Description *</label>
+          <label className="form-label text-xs">{t.reportForm.descriptionLabel}</label>
           <textarea
             rows={5}
             value={description}
             onChange={(e) => onChange({ description: e.target.value })}
-            placeholder="Describe what is incomplete, damaged, delayed, or improper. Include details regarding structural condition or timeline stalls."
+            placeholder={t.reportForm.descriptionPlaceholder}
             className="form-textarea text-xs"
           ></textarea>
           <div className="flex justify-between items-center text-[11px] text-[#64748B] mt-1 font-mono">
-            <span>Provide accurate details for nodal review.</span>
+            <span>{t.reportForm.descNotice}</span>
             <span>{description.length} chars</span>
           </div>
         </div>
 
         {/* Date Input */}
         <div className="form-group">
-          <label className="form-label text-xs">Date First Observed *</label>
+          <label className="form-label text-xs">{t.reportForm.dateObservedLabel}</label>
           <input
             type="date"
             value={whenNoticed}
@@ -53,9 +62,9 @@ export const DescriptionStep: React.FC<Props> = ({
           />
         </div>
 
-        {/* Ongoing Choice (White/Navy/Light Blue - NO ORANGE) */}
+        {/* Ongoing Choice */}
         <div className="form-group">
-          <label className="form-label text-xs">Is the issue currently ongoing? *</label>
+          <label className="form-label text-xs">{t.reportForm.isOngoingLabel}</label>
           <div className="grid grid-cols-3 gap-3">
             {(['Yes', 'No', 'Not Sure'] as const).map((opt) => (
               <button
@@ -68,7 +77,7 @@ export const DescriptionStep: React.FC<Props> = ({
                     : 'bg-white text-[#1F2937] border-[#D9E0E7] hover:bg-[#F5F7F9]'
                 }`}
               >
-                {opt}
+                {getOngoingLabel(opt)}
               </button>
             ))}
           </div>

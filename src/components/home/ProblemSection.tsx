@@ -8,38 +8,41 @@ import {
   Wrench,
   Check
 } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 export const ProblemSection: React.FC = () => {
+  const { t } = useLanguage();
+
   const problems = [
     {
       icon: Clock,
-      title: 'Project Delays',
-      desc: 'Detects works lagging far behind approved completion timelines before funds stall.',
+      title: t.problems.delTitle,
+      desc: t.problems.delDesc,
     },
     {
       icon: IndianRupee,
-      title: 'Unusual Expenditure Patterns',
-      desc: 'Flags suspicious lump-sum disbursements without corresponding physical progress on ground.',
+      title: t.problems.expTitle,
+      desc: t.problems.expDesc,
     },
     {
       icon: TrendingDown,
-      title: 'Cost Overruns',
-      desc: 'Monitors financial deviations exceeding sanctioned budgets and alerts nodal authorities.',
+      title: t.problems.costTitle,
+      desc: t.problems.costDesc,
     },
     {
       icon: CopyCheck,
-      title: 'Potential Duplicate Works',
-      desc: 'Cross-checks project proposals against state/municipal databases to prevent double-funding.',
+      title: t.problems.dupTitle,
+      desc: t.problems.dupDesc,
     },
     {
       icon: ShieldAlert,
-      title: 'Progress Anomalies',
-      desc: 'Compares satellite elevation and drone evidence against reported physical progress claims.',
+      title: t.problems.progTitle,
+      desc: t.problems.progDesc,
     },
     {
       icon: Wrench,
-      title: 'Infrastructure Defects',
-      desc: 'Channels direct evidence from citizens on roads, drains, water, and public facilities.',
+      title: t.problems.defTitle,
+      desc: t.problems.defDesc,
     }
   ];
 
@@ -50,17 +53,17 @@ export const ProblemSection: React.FC = () => {
         {/* Section Header */}
         <div className="max-w-2xl mx-auto text-center space-y-1.5">
           <span className="px-2.5 py-0.5 rounded text-[10px] font-extrabold uppercase font-mono tracking-wider bg-[#EAF3FB] text-[#123B6D] border border-[#BCD7F2]">
-            Public Oversight Objective
+            {t.problems.badge}
           </span>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-[#123B6D] tracking-tight">
-            Key Infrastructure Anomalies Addressed
+            {t.problems.title}
           </h2>
           <p className="text-[#64748B] text-xs sm:text-sm">
-            Automated intelligence assists district officers and representatives in early risk identification.
+            {t.problems.subtitle}
           </p>
         </div>
 
-        {/* 6 Problem Cards Grid (Identical Visual Style - White background, grey border, blue icon, navy title, grey text) */}
+        {/* 6 Problem Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {problems.map((p, idx) => {
             const Icon = p.icon;
@@ -89,15 +92,15 @@ export const ProblemSection: React.FC = () => {
         <div className="bg-[#F5F7F9] border border-[#D9E0E7] rounded p-4 flex flex-col md:flex-row items-center justify-between gap-3">
           <div className="space-y-0.5 text-center md:text-left">
             <h4 className="font-bold text-[#123B6D] text-xs">
-              Empowering MPs, District Authorities & Citizens Alike
+              {t.problems.boxTitle}
             </h4>
             <p className="text-[#64748B] text-xs">
-              AI acts as an objective decision-support tool highlighting high-priority works needing physical audit.
+              {t.problems.boxDesc}
             </p>
           </div>
           <div className="flex items-center gap-2 text-xs font-semibold text-[#123B6D] bg-white px-3 py-1.5 rounded border border-[#D9E0E7] shrink-0">
             <Check className="w-3.5 h-3.5 text-[#1E5AA8]" />
-            <span>Audited & Accountable Workflow</span>
+            <span>{t.problems.boxBadge}</span>
           </div>
         </div>
 

@@ -48,7 +48,7 @@ export const Navbar: React.FC = () => {
           <div className="flex items-center gap-4 text-[#64748B]">
             <div className="hidden md:flex items-center gap-1.5 text-[11px]">
               <span className="text-[#64748B] font-medium flex items-center gap-1 mr-1">
-                <Eye className="w-3.5 h-3.5 text-[#1558A6]" /> Access:
+                <Eye className="w-3.5 h-3.5 text-[#1558A6]" /> {t.nav.accessLabel}
               </span>
               <button 
                 onClick={() => setFontSize('normal')}
@@ -204,14 +204,14 @@ export const Navbar: React.FC = () => {
               onClick={() => setMobileMenuOpen(false)}
               className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-semibold text-xs bg-white text-[#1558A6] border border-[#1558A6]"
             >
-              <span>Report Infrastructure Issue</span>
+              <span>{t.nav.reportIssueBtn}</span>
             </Link>
             <Link
               to="/signin"
               onClick={() => setMobileMenuOpen(false)}
               className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-bold text-xs bg-[#1558A6] text-white"
             >
-              <span>SIGN IN</span>
+              <span>{t.nav.signIn}</span>
             </Link>
           </div>
         </div>

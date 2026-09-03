@@ -8,6 +8,7 @@ import {
   Search, 
   Lock
 } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface Props {
   complaint: Complaint;
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export const ComplaintSuccessModal: React.FC<Props> = ({ complaint, onClose }) => {
+  const { t, tStatus } = useLanguage();
   const [copied, setCopied] = useState(false);
   const navigate = useNavigate();
 
@@ -38,17 +40,17 @@ export const ComplaintSuccessModal: React.FC<Props> = ({ complaint, onClose }) =
 
         <div className="space-y-2">
           <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
-            Report Submitted Successfully
+            {t.reportForm.successTitle}
           </h2>
           <p className="text-slate-600 text-sm">
-            Your report has been securely registered in the MPLADS AI Monitoring system.
+            {t.reportForm.successDesc}
           </p>
         </div>
 
         {/* Highlighted Complaint ID Box */}
         <div className="bg-slate-900 text-white p-5 rounded-2xl border border-slate-800 space-y-2">
           <span className="text-xs font-mono text-slate-400 uppercase tracking-wider">
-            Official Complaint Tracking ID
+            {t.reportForm.complaintIdLabel}
           </span>
           <div className="flex items-center justify-center gap-3">
             <span className="text-xl sm:text-2xl font-extrabold font-mono text-amber-400">
@@ -69,24 +71,24 @@ export const ComplaintSuccessModal: React.FC<Props> = ({ complaint, onClose }) =
         <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-2.5 text-xs text-left">
           <div className="flex justify-between items-center border-b border-slate-200/60 pb-2">
             <span className="text-slate-600 flex items-center gap-1.5">
-              <Lock className="w-3.5 h-3.5 text-emerald-600" /> Identity Protection:
+              <Lock className="w-3.5 h-3.5 text-emerald-600" /> {t.track.identityStatusLabel}
             </span>
             <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-              Active ({complaint.anonymousCitizenId})
+              {t.reportForm.identityProtectedLabel} ({complaint.anonymousCitizenId})
             </span>
           </div>
 
           <div className="flex justify-between items-center border-b border-slate-200/60 pb-2">
-            <span className="text-slate-600">Evidence Status:</span>
+            <span className="text-slate-600">{t.track.photoMetadataLabel}</span>
             <span className="font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-              {complaint.evidenceVerificationStatus}
+              {t.reportForm.photoVerified}
             </span>
           </div>
 
           <div className="flex justify-between items-center">
             <span className="text-slate-600">Current Status:</span>
             <span className="font-bold text-slate-800 bg-slate-200 px-2 py-0.5 rounded">
-              {complaint.complaintStatus}
+              {tStatus(complaint.complaintStatus)}
             </span>
           </div>
         </div>
@@ -98,14 +100,14 @@ export const ComplaintSuccessModal: React.FC<Props> = ({ complaint, onClose }) =
             className="btn btn-primary btn-block btn-lg flex items-center justify-center gap-2"
           >
             <Search className="w-5 h-5" />
-            <span>Track Complaint Live Status</span>
+            <span>{t.reportForm.trackNowBtn}</span>
           </button>
 
           <button
             onClick={onClose}
             className="btn btn-ghost btn-block text-slate-600 text-sm"
           >
-            Back to Home Page
+            {t.reportForm.backHomeBtn}
           </button>
         </div>
 

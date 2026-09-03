@@ -10,8 +10,10 @@ import {
   Lock,
   RefreshCw
 } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export const RoleLoginPage: React.FC = () => {
+  const { t } = useLanguage();
   const { role: roleParam } = useParams<{ role: string }>();
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -25,8 +27,6 @@ export const RoleLoginPage: React.FC = () => {
   
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,7 +59,7 @@ export const RoleLoginPage: React.FC = () => {
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#64748B] hover:text-[#1558A6] transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Back to Role Selection</span>
+            <span>{t.roleLogin.backToRoles}</span>
           </Link>
         </div>
 
@@ -75,15 +75,15 @@ export const RoleLoginPage: React.FC = () => {
             />
 
             <span className="text-[10px] font-mono font-bold text-[#64748B] block uppercase tracking-wider">
-              MPLADS AI Monitor • Official Portal
+              {t.roleLogin.portalHeader}
             </span>
 
             <h1 className="text-xl font-extrabold text-[#1558A6]">
-              Secure Official Login
+              {t.roleLogin.pageTitle}
             </h1>
 
             <p className="text-xs text-[#64748B] font-medium">
-              Authorized personnel only — {roleData.title}
+              {t.roleLogin.authorizedOnly} {roleData.title}
             </p>
           </div>
 
@@ -92,7 +92,7 @@ export const RoleLoginPage: React.FC = () => {
             
             <div className="form-group">
               <label className="form-label flex items-center justify-between text-xs">
-                <span>Official Email / ID *</span>
+                <span>{t.roleLogin.emailLabel}</span>
                 <span className="text-[10px] text-[#64748B] font-mono">Sample: {roleData.sampleId}</span>
               </label>
               <input
@@ -107,13 +107,13 @@ export const RoleLoginPage: React.FC = () => {
 
             <div className="form-group">
               <label className="form-label flex items-center justify-between text-xs">
-                <span>Password *</span>
+                <span>{t.roleLogin.passwordLabel}</span>
                 <button
                   type="button"
                   onClick={() => setShowForgotModal(true)}
                   className="text-[11px] text-[#2B6CB0] font-semibold hover:underline"
                 >
-                  Forgot Password?
+                  {t.roleLogin.forgotPassword}
                 </button>
               </label>
               <input
@@ -128,7 +128,7 @@ export const RoleLoginPage: React.FC = () => {
 
             {/* Captcha Security Check */}
             <div className="form-group">
-              <label className="form-label text-xs">Security Check (Captcha) *</label>
+              <label className="form-label text-xs">{t.roleLogin.captchaLabel}</label>
               <div className="flex items-center gap-2">
                 <div className="bg-[#F6F8FA] border border-[#D8E0E8] px-3 py-2 rounded text-sm font-mono font-bold tracking-widest text-[#1558A6] select-none flex items-center gap-2">
                   <span>7 K 2 P 9</span>
@@ -138,7 +138,7 @@ export const RoleLoginPage: React.FC = () => {
                   type="text"
                   value={captchaInput}
                   onChange={(e) => setCaptchaInput(e.target.value)}
-                  placeholder="Enter code"
+                  placeholder={t.roleLogin.captchaPlaceholder}
                   className="form-input text-xs font-mono uppercase"
                   required
                 />
@@ -154,7 +154,7 @@ export const RoleLoginPage: React.FC = () => {
                 className="w-3.5 h-3.5 rounded text-[#1558A6] focus:ring-[#2B6CB0] border-[#D8E0E8]"
               />
               <label htmlFor="remember" className="text-xs text-[#1F2937] font-medium">
-                Remember this device for official session
+                {t.roleLogin.rememberDevice}
               </label>
             </div>
 
@@ -165,7 +165,7 @@ export const RoleLoginPage: React.FC = () => {
               className="px-4 py-2.5 rounded-md font-bold text-xs bg-[#1558A6] hover:bg-[#0F4482] text-white w-full flex items-center justify-center gap-2 shadow-2xs border border-[#1558A6] cursor-pointer"
             >
               <UserCheck className="w-4 h-4" />
-              <span>{isSubmitting ? 'Authenticating Officer...' : 'SIGN IN'}</span>
+              <span>{isSubmitting ? t.roleLogin.signingIn : t.roleLogin.signInBtn}</span>
             </button>
 
             {/* Secondary Button */}
@@ -173,7 +173,7 @@ export const RoleLoginPage: React.FC = () => {
               to="/signin"
               className="px-4 py-2 rounded-md font-semibold text-xs bg-white text-[#1558A6] border border-[#1558A6] hover:bg-[#EAF3FB] w-full flex items-center justify-center gap-2 transition-all"
             >
-              <span>BACK TO ROLE SELECTION</span>
+              <span>{t.roleLogin.backToRolesBtn}</span>
             </Link>
 
           </form>
@@ -183,7 +183,7 @@ export const RoleLoginPage: React.FC = () => {
         {/* Security Notice Box */}
         <div className="p-3.5 bg-white border border-[#D8E0E8] rounded-md text-center text-xs text-[#1558A6] font-mono flex items-center justify-center gap-2 shadow-2xs">
           <Lock className="w-3.5 h-3.5 text-[#1558A6] shrink-0" />
-          <span>Security Notice: Authorized official access log recorded & monitored.</span>
+          <span>{t.roleLogin.securityNotice}</span>
         </div>
 
         {/* Forgot Password Modal */}
@@ -202,20 +202,20 @@ export const RoleLoginPage: React.FC = () => {
                   <KeyRound className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-[#1558A6] text-sm">Credential Support</h3>
-                  <p className="text-[11px] text-[#64748B] font-mono">Official Officer Recovery</p>
+                  <h3 className="font-bold text-[#1558A6] text-sm">{t.roleLogin.credentialSupportTitle}</h3>
+                  <p className="text-[11px] text-[#64748B] font-mono">{t.roleLogin.credentialSupportSub}</p>
                 </div>
               </div>
 
               <p className="text-[#1F2937] text-xs leading-relaxed">
-                To reset credentials for official ID <strong>{officialId}</strong>, please submit a token request to your State Nodal Administrator or Ministry IT Nodal Desk.
+                {t.roleLogin.credentialSupportDesc}
               </p>
 
               <button
                 onClick={() => setShowForgotModal(false)}
                 className="px-4 py-2 rounded-md font-bold text-xs bg-[#1558A6] text-white w-full cursor-pointer"
               >
-                Close
+                {t.roleLogin.modalClose}
               </button>
             </div>
           </div>

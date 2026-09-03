@@ -1,30 +1,33 @@
 import React from 'react';
 import { Layers, AlertTriangle, Clock, MessageSquare } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 export const InformationStrip: React.FC = () => {
+  const { t } = useLanguage();
+
   const stats = [
     {
-      label: 'PROJECTS MONITORED',
+      label: t.infoStrip.projMonitored,
       value: '1,250+',
-      subtext: 'Active Constituency Infrastructure Works',
+      subtext: t.infoStrip.projMonitoredSub,
       icon: Layers,
     },
     {
-      label: 'PROJECTS AT RISK',
+      label: t.infoStrip.projRisk,
       value: '84',
-      subtext: 'Flagged by Anomaly AI Models',
+      subtext: t.infoStrip.projRiskSub,
       icon: AlertTriangle,
     },
     {
-      label: 'UNDER REVIEW',
+      label: t.infoStrip.underReview,
       value: '36',
-      subtext: 'Pending District Nodal Verification',
+      subtext: t.infoStrip.underReviewSub,
       icon: Clock,
     },
     {
-      label: 'CITIZEN REPORTS',
+      label: t.infoStrip.citizenReports,
       value: '420+',
-      subtext: 'Verified Anonymous Complaints',
+      subtext: t.infoStrip.citizenReportsSub,
       icon: MessageSquare,
     }
   ];
@@ -38,15 +41,15 @@ export const InformationStrip: React.FC = () => {
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#123B6D]"></span>
             <h2 className="text-xs font-bold uppercase tracking-wider text-[#123B6D] font-mono">
-              National Infrastructure Monitoring Telemetry
+              {t.infoStrip.telemetryHeader}
             </h2>
           </div>
           <div className="text-[11px] text-[#64748B] font-mono">
-            Sample Demo Telemetry Data
+            {t.infoStrip.sampleDataLabel}
           </div>
         </div>
 
-        {/* 4 Stat Cards Grid (White background, thin grey border, dark navy numbers, grey labels - Prompt Specs) */}
+        {/* 4 Stat Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {stats.map((stat, idx) => {
             const Icon = stat.icon;
