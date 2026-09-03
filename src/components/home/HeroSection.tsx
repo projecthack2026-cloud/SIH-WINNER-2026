@@ -42,16 +42,19 @@ export const HeroSection: React.FC = () => {
           <div className="lg:col-span-7 space-y-6">
             
             {/* Small Official Portal Label */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#EAF3FB] border border-[#BCD7F2] text-[#1558A6] text-xs font-semibold">
-              <span className="h-2 w-2 rounded-full bg-[#1558A6]"></span>
+            <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-md bg-[#EAF3FB] border border-[#BCD7F2] text-[#1558A6] text-xs font-bold">
+              <img src="/logo.png" alt="Logo" className="w-5 h-5 object-contain" />
               <span>Official Digital Infrastructure Monitoring Portal</span>
             </div>
 
             {/* Main Headline */}
             <div className="space-y-2">
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#1558A6] tracking-tight leading-tight">
-                MPLADS AI Monitor
-              </h1>
+              <div className="flex items-center gap-3">
+                <img src="/logo.png" alt="MPLADS AI Monitor Shield Logo" className="w-12 h-12 sm:w-14 sm:h-14 object-contain shrink-0 drop-shadow-xs" />
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#1558A6] tracking-tight leading-tight">
+                  MPLADS <span className="text-[#2B6CB0]">AI Monitor</span>
+                </h1>
+              </div>
               <h2 className="text-lg sm:text-xl font-bold text-[#2B6CB0]">
                 AI-Powered Infrastructure Monitoring & Accountability
               </h2>

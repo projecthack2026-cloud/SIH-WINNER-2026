@@ -126,9 +126,11 @@ export const Sidebar: React.FC<Props> = ({
       {/* Brand Header */}
       <div className="p-3.5 border-b border-[#D8E0E8] flex items-center justify-between bg-[#F6F8FA]">
         <Link to="/" className="flex items-center gap-2.5 overflow-hidden">
-          <div className="p-1.5 rounded-md bg-[#EAF3FB] text-[#1558A6] border border-[#BCD7F2] shrink-0">
-            <Shield className="w-5 h-5" />
-          </div>
+          <img 
+            src="/logo.png" 
+            alt="MPLADS AI Monitor Logo" 
+            className="w-8 h-8 object-contain shrink-0" 
+          />
           {!collapsed && (
             <div className="truncate">
               <span className="font-extrabold text-sm text-[#1558A6] tracking-tight leading-none block">

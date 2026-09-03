@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
-  ShieldCheck, 
   Menu, 
   X, 
   Globe, 
@@ -100,9 +99,11 @@ export const Navbar: React.FC = () => {
           
           {/* Logo & Emblem */}
           <Link to="/" className="flex items-center gap-3 shrink-0">
-            <div className="p-2.5 rounded-lg bg-[#EAF3FB] text-[#1558A6] border border-[#BCD7F2] shadow-2xs">
-              <ShieldCheck className="w-7 h-7" />
-            </div>
+            <img 
+              src="/logo.png" 
+              alt="MPLADS AI Monitor Logo" 
+              className="w-10 h-10 object-contain shrink-0 drop-shadow-xs" 
+            />
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-extrabold text-xl sm:text-2xl text-[#1558A6] tracking-tight leading-none">

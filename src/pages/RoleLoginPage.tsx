@@ -1,18 +1,12 @@
 import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ROLES } from '../data/mockData';
-import type { StakeholderRole } from '../types/auth';
 import { useAuth } from '../context/AuthContext';
 import { 
-  Building2, 
-  Building, 
-  Landmark, 
-  ShieldAlert, 
   ArrowLeft, 
   UserCheck, 
   KeyRound, 
   X,
-  Activity,
   Lock,
   RefreshCw
 } from 'lucide-react';
@@ -32,18 +26,7 @@ export const RoleLoginPage: React.FC = () => {
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const getRoleIcon = (id: StakeholderRole) => {
-    switch (id) {
-      case 'mp': return Building2;
-      case 'district': return Building;
-      case 'state': return Landmark;
-      case 'ministry': return ShieldAlert;
-      case 'admin': return Activity;
-      default: return Building;
-    }
-  };
 
-  const RoleIcon = getRoleIcon(roleData.id);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,9 +68,11 @@ export const RoleLoginPage: React.FC = () => {
           
           {/* Header */}
           <div className="text-center space-y-1.5 border-b border-[#D8E0E8] pb-4">
-            <div className="p-3 rounded-md bg-[#EAF3FB] text-[#1558A6] w-fit mx-auto border border-[#BCD7F2]">
-              <RoleIcon className="w-6 h-6" />
-            </div>
+            <img 
+              src="/logo.png" 
+              alt="MPLADS AI Monitor Logo" 
+              className="w-12 h-12 object-contain mx-auto drop-shadow-xs mb-1" 
+            />
 
             <span className="text-[10px] font-mono font-bold text-[#64748B] block uppercase tracking-wider">
               MPLADS AI Monitor • Official Portal

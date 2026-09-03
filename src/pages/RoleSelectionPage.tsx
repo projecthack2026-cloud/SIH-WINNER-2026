@@ -9,8 +9,7 @@ import {
   ShieldAlert, 
   ArrowRight, 
   Lock, 
-  Activity,
-  ShieldCheck
+  Activity
 } from 'lucide-react';
 
 export const RoleSelectionPage: React.FC = () => {
@@ -38,12 +37,13 @@ export const RoleSelectionPage: React.FC = () => {
         
         {/* Main Card Container */}
         <div className="bg-white rounded-lg p-6 sm:p-8 border border-[#D8E0E8] shadow-xs space-y-6">
-          
           {/* Header */}
           <div className="text-center space-y-2 border-b border-[#D8E0E8] pb-5">
-            <div className="p-3 rounded-md bg-[#EAF3FB] text-[#1558A6] w-fit mx-auto border border-[#BCD7F2]">
-              <ShieldCheck className="w-7 h-7" />
-            </div>
+            <img 
+              src="/logo.png" 
+              alt="MPLADS AI Monitor Logo" 
+              className="w-14 h-14 object-contain mx-auto drop-shadow-xs mb-1" 
+            />
 
             <span className="text-[11px] font-mono font-bold text-[#64748B] block uppercase tracking-wider">
               MPLADS AI Monitor • Official Portal

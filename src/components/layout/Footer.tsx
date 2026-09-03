@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ShieldCheck, Lock, Eye, AlertCircle } from 'lucide-react';
+import { Lock, Eye, AlertCircle } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   return (
@@ -13,9 +13,11 @@ export const Footer: React.FC = () => {
           {/* Brand Identity */}
           <div className="lg:col-span-2 space-y-3">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-md bg-white text-[#1558A6] border border-white">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
+              <img 
+                src="/logo.png" 
+                alt="MPLADS AI Monitor Logo" 
+                className="w-9 h-9 object-contain shrink-0 bg-white p-0.5 rounded-md" 
+              />
               <div>
                 <span className="font-extrabold text-lg text-white tracking-tight block">
                   MPLADS AI Monitor
